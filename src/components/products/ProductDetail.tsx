@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FiStar, FiHeart, FiShare2, FiCheck, FiMinus, FiPlus } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
@@ -53,9 +54,9 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       <div className="container mx-auto px-4">
         {/* Breadcrumb */}
         <nav className="mb-8 text-sm text-gray-600">
-          <a href="/" className="hover:text-primary-600">Home</a>
+          <Link href="/" className="hover:text-primary-600">Home</Link>
           <span className="mx-2">/</span>
-          <a href="/shop" className="hover:text-primary-600">Shop</a>
+          <Link href="/shop" className="hover:text-primary-600">Shop</Link>
           <span className="mx-2">/</span>
           <span className="text-gray-900">{product.name}</span>
         </nav>

@@ -222,7 +222,7 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-serif font-bold mb-6">Experience the RENFAYE Difference</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Join thousands of satisfied clients who trust us with their lash needs. Book your appointment today and discover why we're the premier choice for eyelash extensions.
+            Join thousands of satisfied clients who trust us with their lash needs. Book your appointment today and discover why we&apos;re the premier choice for eyelash extensions.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-lg mx-auto">
             <button className="bg-white text-pink-600 hover:bg-gray-100 px-8 py-4 rounded-full font-medium transition-colors duration-300">

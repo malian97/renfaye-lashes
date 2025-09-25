@@ -64,13 +64,13 @@ export default function AboutSection() {
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold mb-4 sm:mb-6">Why Choose RENFAYE LASHES?</h2>
             <p className="text-gray-600 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">
-              With over 8 years of experience in the beauty industry, we've perfected the art of eyelash extensions. 
+              With over 8 years of experience in the beauty industry, we&apos;ve perfected the art of eyelash extensions. 
               Our certified technicians use only premium materials and the latest techniques to ensure your lashes 
               look natural, feel comfortable, and last longer.
             </p>
             <p className="text-gray-600 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base">
               Every client receives a personalized consultation to determine the perfect lash style for their 
-              unique eye shape and lifestyle. We're committed to enhancing your natural beauty while maintaining 
+              unique eye shape and lifestyle. We&apos;re committed to enhancing your natural beauty while maintaining 
               the health of your natural lashes.
             </p>
             

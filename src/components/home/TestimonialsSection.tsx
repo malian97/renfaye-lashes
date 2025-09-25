@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { FiStar, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
@@ -21,7 +20,7 @@ const testimonials: Testimonial[] = [
     name: "Sarah Johnson",
     location: "New York, NY",
     rating: 5,
-    text: "Absolutely amazing! The lashes look so natural and beautiful. I've been getting compliments non-stop. The service was professional and the results exceeded my expectations.",
+    text: "Absolutely amazing! The lashes look so natural and beautiful. I&apos;ve been getting compliments non-stop. The service was professional and the results exceeded my expectations.",
     image: "https://picsum.photos/150/150?random=15",
     service: "Classic Volume Lashes"
   },
@@ -30,7 +29,7 @@ const testimonials: Testimonial[] = [
     name: "Emily Chen",
     location: "Los Angeles, CA",
     rating: 5,
-    text: "Best lash experience I've ever had! The attention to detail is incredible. My lashes have lasted for weeks and still look perfect. Highly recommend RENFAYE LASHES!",
+    text: "Best lash experience I&apos;ve ever had! The attention to detail is incredible. My lashes have lasted for weeks and still look perfect. Highly recommend RENFAYE LASHES!",
     image: "https://picsum.photos/150/150?random=16",
     service: "Hybrid Volume Set"
   },
@@ -39,7 +38,7 @@ const testimonials: Testimonial[] = [
     name: "Maria Rodriguez",
     location: "Miami, FL",
     rating: 5,
-    text: "I'm obsessed with my new lashes! They make me feel so confident and glamorous. The team is so skilled and made the whole process comfortable and relaxing.",
+    text: "I&apos;m obsessed with my new lashes! They make me feel so confident and glamorous. The team is so skilled and made the whole process comfortable and relaxing.",
     image: "https://picsum.photos/150/150?random=17",
     service: "Mega Volume Set"
   },
@@ -48,7 +47,7 @@ const testimonials: Testimonial[] = [
     name: "Jessica Williams",
     location: "Chicago, IL",
     rating: 5,
-    text: "The quality is unmatched! I've tried other places but nothing compares to RENFAYE LASHES. The lashes are lightweight, comfortable, and look absolutely stunning.",
+    text: "The quality is unmatched! I&apos;ve tried other places but nothing compares to RENFAYE LASHES. The lashes are lightweight, comfortable, and look absolutely stunning.",
     image: "https://picsum.photos/150/150?random=18",
     service: "Classic Volume Lashes"
   }
@@ -96,7 +95,7 @@ export default function TestimonialsSection() {
                     </div>
                     
                     <blockquote className="text-sm sm:text-base lg:text-lg text-gray-700 mb-4 sm:mb-6 italic leading-relaxed">
-                      "{testimonial.text}"
+                      &ldquo;{testimonial.text}&rdquo;
                     </blockquote>
                     
                     <div className="flex items-center justify-center space-x-3 sm:space-x-4">
