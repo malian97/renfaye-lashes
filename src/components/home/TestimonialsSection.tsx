@@ -75,7 +75,7 @@ export default function TestimonialsSection() {
         <div className="text-center mb-8 sm:mb-12 lg:mb-16">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold mb-3 sm:mb-4 text-gray-900">What Our Clients Say</h2>
           <p className="text-gray-700 text-sm sm:text-base max-w-3xl mx-auto">
-            Don't just take our word for it. Here's what our satisfied clients have to say about their experience with RENFAYE LASHES.
+            Don&apos;t just take our word for it. Here&apos;s what our satisfied clients have to say about their experience with RENFAYE LASHES.
           </p>
         </div>
 

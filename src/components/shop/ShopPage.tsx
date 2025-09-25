@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiFilter, FiGrid, FiList, FiStar } from 'react-icons/fi';
+import { FiGrid, FiList, FiStar } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
 
 interface Product {
