@@ -33,12 +33,12 @@ const footerLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white pt-16 pb-8">
+    <footer className="bg-gray-900 text-white pt-20 pb-12">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand Info */}
           <div className="mb-8 md:col-span-2 lg:col-span-1">
-            <h3 className="text-2xl font-serif font-bold mb-4">RENFAYE LASHES</h3>
+            <h3 className="text-2xl font-serif font-bold mb-6">RENFAYE LASHES</h3>
             <p className="text-gray-400 mb-6">
               Premium eyelash extensions that enhance your natural beauty. 
               Discover the perfect lashes for a glamorous look that lasts.
@@ -61,9 +61,9 @@ export default function Footer() {
 
           {/* Footer Links */}
           {footerLinks.map((section) => (
-            <div key={section.title} className="mb-8">
-              <h4 className="text-lg font-medium mb-4">{section.title}</h4>
-              <ul className="space-y-2">
+            <div key={section.title} className="mb-12">
+              <h4 className="text-lg font-medium mb-6">{section.title}</h4>
+              <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.name}>
                     <Link 

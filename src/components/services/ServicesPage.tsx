@@ -156,12 +156,12 @@ export default function ServicesPage() {
       </section>
 
       {/* Spacer */}
-      <div className="py-12"></div>
+      <div className="py-16"></div>
 
       {/* Services Grid */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto">
             {services.map((service, index) => (
               <motion.div
                 key={service.id}
@@ -186,9 +186,9 @@ export default function ServicesPage() {
                   />
                 </div>
                 
-                <div className="p-6">
-                  <h3 className="text-2xl font-serif font-bold mb-3">{service.name}</h3>
-                  <p className="text-gray-600 mb-4">{service.description}</p>
+                <div className="p-4 sm:p-6">
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-serif font-bold mb-2 sm:mb-3">{service.name}</h3>
+                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 line-clamp-3">{service.description}</p>
                   
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2 text-gray-500">
@@ -222,7 +222,7 @@ export default function ServicesPage() {
       </section>
 
       {/* Spacer */}
-      <div className="py-12"></div>
+      <div className="py-16"></div>
 
       {/* Process Section */}
       <section className="py-20 bg-gray-50">

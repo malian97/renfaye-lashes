@@ -134,7 +134,7 @@ export default function ShopPage() {
         <div className="py-12"></div>
         
         {/* Filters and Controls */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-16">
           {/* Category Filter */}
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
@@ -158,7 +158,7 @@ export default function ShopPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
             >
               <option value="featured">Featured</option>
               <option value="newest">Newest</option>
@@ -171,13 +171,13 @@ export default function ShopPage() {
             <div className="flex border border-gray-300 rounded-lg overflow-hidden">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 ${viewMode === 'grid' ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                className={`p-2 ${viewMode === 'grid' ? 'bg-pink-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
               >
                 <FiGrid className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 ${viewMode === 'list' ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                className={`p-2 ${viewMode === 'list' ? 'bg-pink-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
               >
                 <FiList className="w-5 h-5" />
               </button>
@@ -188,8 +188,8 @@ export default function ShopPage() {
         {/* Products Grid/List */}
         <div className={`${
           viewMode === 'grid' 
-            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6' 
-            : 'space-y-4 sm:space-y-6'
+            ? 'grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8 lg:gap-10' 
+            : 'space-y-6 sm:space-y-8'
         }`}>
           {sortedProducts.map((product) => (
             <div
@@ -227,7 +227,7 @@ export default function ShopPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 sm:p-4 lg:p-6">
                   <button
                     onClick={() => handleAddToCart(product)}
-                    className="w-full bg-white text-gray-900 py-2 sm:py-3 rounded-full font-medium text-sm sm:text-base transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-primary-50"
+                    className="w-full bg-white text-gray-900 py-2 sm:py-3 rounded-full font-medium text-sm sm:text-base transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-pink-50"
                   >
                     Add to Cart
                   </button>
@@ -236,9 +236,9 @@ export default function ShopPage() {
 
               {/* Product Info */}
               <div className={`p-3 sm:p-4 lg:p-6 ${viewMode === 'list' ? 'flex-1' : ''}`}>
-                <span className="text-xs sm:text-sm text-primary-600 font-medium">{product.category}</span>
+                <span className="text-xs sm:text-sm text-pink-600 font-medium">{product.category}</span>
                 <h3 className="text-sm sm:text-base lg:text-lg font-semibold mt-1 mb-2 line-clamp-2">
-                  <Link href={`/products/${product.id}`} className="hover:text-primary-600 transition-colors">
+                  <Link href={`/products/${product.id}`} className="hover:text-pink-600 transition-colors">
                     {product.name}
                   </Link>
                 </h3>
@@ -270,7 +270,7 @@ export default function ShopPage() {
                   </div>
                   <Link
                     href={`/products/${product.id}`}
-                    className="text-primary-600 hover:text-primary-700 font-medium text-xs sm:text-sm"
+                    className="text-pink-600 hover:text-pink-700 font-medium text-xs sm:text-sm"
                   >
                     View Details
                   </Link>
@@ -281,10 +281,10 @@ export default function ShopPage() {
         </div>
 
         {/* Spacer */}
-        <div className="py-8"></div>
+        <div className="py-12"></div>
 
         {/* Results Count */}
-        <div className="mt-12 text-center text-gray-600">
+        <div className="mt-16 text-center text-gray-600">
           Showing {sortedProducts.length} of {products.length} products
         </div>
 

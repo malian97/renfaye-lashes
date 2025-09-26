@@ -70,10 +70,10 @@ export default function TestimonialsSection() {
   }, []);
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-primary-50 to-primary-100">
+    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-pink-50 to-pink-100">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold mb-3 sm:mb-4 text-gray-900">What Our Clients Say</h2>
+        <div className="text-center mb-16 sm:mb-20 lg:mb-24">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold mb-6 sm:mb-8 text-gray-900">What Our Clients Say</h2>
           <p className="text-gray-700 text-sm sm:text-base max-w-3xl mx-auto">
             Don&apos;t just take our word for it. Here&apos;s what our satisfied clients have to say about their experience with RENFAYE LASHES.
           </p>
@@ -110,7 +110,7 @@ export default function TestimonialsSection() {
                       <div className="text-left">
                         <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{testimonial.name}</h4>
                         <p className="text-xs sm:text-sm text-gray-600">{testimonial.location}</p>
-                        <p className="text-xs sm:text-sm text-primary-500 font-medium">{testimonial.service}</p>
+                        <p className="text-xs sm:text-sm text-pink-500 font-medium">{testimonial.service}</p>
                       </div>
                     </div>
                   </div>
@@ -122,14 +122,14 @@ export default function TestimonialsSection() {
           {/* Navigation Buttons - Hidden on mobile */}
           <button
             onClick={prevTestimonial}
-            className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 lg:p-3 shadow-lg hover:shadow-xl transition-all duration-300 text-gray-600 hover:text-primary-500 hover:bg-primary-50"
+            className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 lg:p-3 shadow-lg hover:shadow-xl transition-all duration-300 text-gray-600 hover:text-pink-500 hover:bg-pink-50"
           >
             <FiChevronLeft className="w-5 h-5 lg:w-6 lg:h-6" />
           </button>
           
           <button
             onClick={nextTestimonial}
-            className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 lg:p-3 shadow-lg hover:shadow-xl transition-all duration-300 text-gray-600 hover:text-primary-500 hover:bg-primary-50"
+            className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 lg:p-3 shadow-lg hover:shadow-xl transition-all duration-300 text-gray-600 hover:text-pink-500 hover:bg-pink-50"
           >
             <FiChevronRight className="w-5 h-5 lg:w-6 lg:h-6" />
           </button>
@@ -141,7 +141,7 @@ export default function TestimonialsSection() {
                 key={index}
                 onClick={() => setCurrentIndex(index)}
                 className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-primary-500' : 'bg-gray-300'
+                  index === currentIndex ? 'bg-pink-500' : 'bg-gray-300'
                 }`}
               />
             ))}

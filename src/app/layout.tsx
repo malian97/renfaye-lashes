@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display } from 'next/font/google';
 import "./globals.css";
-import ClientLayout from '@/components/layout/ClientLayout';
-import Footer from '@/components/layout/Footer';
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import { CartProvider } from "@/contexts/CartContext";
+import { AdminProvider } from "@/contexts/AdminContext";
+import { Toaster } from 'react-hot-toast';
+import ClientLayout from "@/components/layout/ClientLayout";
 
 // Font configuration
 const inter = Inter({
@@ -49,7 +53,6 @@ export default function RootLayout({
         <ClientLayout>
           {children}
         </ClientLayout>
-        <Footer />
       </body>
     </html>
   );

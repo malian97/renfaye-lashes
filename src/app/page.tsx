@@ -9,30 +9,30 @@ export default function Home() {
     <div className="pt-16">
       {/* Hero Section */}
       <HeroSection />
-
-      {/* Spacer */}
-      <div className="py-12"></div>
+      
+      {/* MASSIVE SPACER 1 */}
+      <div className="w-full h-48 bg-white"></div>
 
       {/* Featured Products */}
       <FeaturedProducts />
-
-      {/* Spacer */}
-      <div className="py-12"></div>
+      
+      {/* MASSIVE SPACER 2 */}
+      <div className="w-full h-48 bg-white"></div>
 
       {/* About Section */}
       <AboutSection />
-
-      {/* Spacer */}
-      <div className="py-12"></div>
+      
+      {/* MASSIVE SPACER 3 */}
+      <div className="w-full h-48 bg-white"></div>
 
       {/* Testimonials */}
       <TestimonialsSection />
-
-      {/* Spacer */}
-      <div className="py-12"></div>
+      
+      {/* MASSIVE SPACER 4 */}
+      <div className="w-full h-48 bg-white"></div>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary-100 to-primary-200">
+      <section className="py-20 bg-gradient-to-r from-pink-100 to-pink-200">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-serif font-bold mb-6 text-gray-900">Ready to Enhance Your Look?</h2>
           <p className="text-xl text-gray-700 max-w-2xl mx-auto mb-8">
@@ -41,22 +41,19 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <a 
               href="/book-now" 
-              className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-4 rounded-full font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-4 rounded-full font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Book Now
             </a>
             <a 
               href="/services" 
-              className="bg-white hover:bg-primary-50 text-primary-600 px-8 py-4 rounded-full font-medium transition-all duration-300 border-2 border-primary-300 hover:border-primary-400 shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="bg-white hover:bg-pink-50 text-pink-600 px-8 py-4 rounded-full font-medium transition-all duration-300 border-2 border-pink-300 hover:border-pink-400 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Our Services
             </a>
           </div>
         </div>
       </section>
-
-      {/* Bottom Spacer */}
-      <div className="py-12"></div>
     </div>
   );
 }

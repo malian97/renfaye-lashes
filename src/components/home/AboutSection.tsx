@@ -85,7 +85,7 @@ export default function AboutSection() {
                   viewport={{ once: true }}
                   className="text-center"
                 >
-                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-500 mb-2">{stat.number}</h3>
+                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-pink-500 mb-2">{stat.number}</h3>
                   <p className="text-sm sm:text-base font-medium text-gray-900 mb-1">{stat.label}</p>
                   <p className="text-xs sm:text-sm text-gray-600">{stat.description}</p>
                 </motion.div>

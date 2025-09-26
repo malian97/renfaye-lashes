@@ -148,7 +148,7 @@ export default function GalleryPage() {
       {/* Filter Tabs */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex flex-wrap justify-center gap-4 mb-16">
+          <div className="flex flex-wrap justify-center gap-4 mb-20">
             {categories.map((category) => (
               <button
                 key={category}
@@ -167,7 +167,7 @@ export default function GalleryPage() {
           {/* Gallery Grid */}
           <motion.div 
             layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-6xl mx-auto"
+            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto"
           >
             <AnimatePresence>
               {filteredImages.map((image, index) => (
