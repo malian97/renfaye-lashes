@@ -6,7 +6,7 @@ import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import ImageUpload from '@/components/admin/ImageUpload';
 import { contentManager, SiteContent } from '@/lib/content-manager';
-import { FiSave, FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi';
+import { FiSave, FiPlus, FiTrash2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 export default function AdminContent() {
@@ -28,7 +28,7 @@ export default function AdminContent() {
     toast.success('Content saved successfully');
   };
 
-  const updateContent = (section: keyof SiteContent, data: any) => {
+  const updateContent = (section: keyof SiteContent, data: unknown) => {
     setContent(prev => ({
       ...prev,
       [section]: data
@@ -126,7 +126,7 @@ export default function AdminContent() {
               {['hero', 'about', 'testimonials', 'services'].map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab as any)}
+                  onClick={() => setActiveTab(tab as 'hero' | 'about' | 'testimonials' | 'services')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm capitalize ${
                     activeTab === tab
                       ? 'border-pink-500 text-pink-600'

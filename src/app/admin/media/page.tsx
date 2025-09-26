@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import ImageUpload from '@/components/admin/ImageUpload';
-import { FiUpload, FiTrash2, FiCopy, FiSearch, FiGrid, FiList, FiImage } from 'react-icons/fi';
+import { FiUpload, FiTrash2, FiCopy, FiSearch, FiGrid, FiList } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 

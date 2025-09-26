@@ -8,7 +8,6 @@ import { contentManager, Product } from '@/lib/content-manager';
 import { FiSave, FiArrowLeft } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import Image from 'next/image';
 import ImageUpload from '@/components/admin/ImageUpload';
 
 export default function EditProduct() {
@@ -30,7 +29,6 @@ export default function EditProduct() {
     bestSeller: false
   });
 
-  const [imagePreview, setImagePreview] = useState<string>('');
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
@@ -43,15 +41,12 @@ export default function EditProduct() {
       const existingProduct = contentManager.getProduct(productId);
       if (existingProduct) {
         setProduct(existingProduct);
-        setImagePreview(existingProduct.image);
       } else {
         toast.error('Product not found');
         router.push('/admin/products');
       }
-    } else {
-      setImagePreview(product.image || '');
     }
-  }, [productId, isNew]);
+  }, [productId, isNew, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,10 +76,6 @@ export default function EditProduct() {
     router.push('/admin/products');
   };
 
-  const handleImageUrlChange = (url: string) => {
-    setProduct({ ...product, image: url });
-    setImagePreview(url);
-  };
 
   if (isLoading) {
     return (
@@ -201,7 +192,6 @@ export default function EditProduct() {
               value={product.image || ''}
               onChange={(url) => {
                 setProduct({ ...product, image: url });
-                setImagePreview(url);
               }}
               label="Product Image"
             />

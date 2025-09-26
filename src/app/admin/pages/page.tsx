@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { FiSave, FiEdit2, FiEye, FiFileText } from 'react-icons/fi';
+import { FiSave, FiEye, FiFileText } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -24,7 +24,6 @@ export default function AdminPages() {
   const router = useRouter();
   const [pages, setPages] = useState<PageContent[]>([]);
   const [selectedPage, setSelectedPage] = useState<PageContent | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -154,7 +153,7 @@ Email: info@renfayelashes.com</p>`,
     toast.success('Page saved successfully');
   };
 
-  const updateSelectedPage = (field: keyof PageContent, value: any) => {
+  const updateSelectedPage = (field: keyof PageContent, value: string) => {
     if (!selectedPage) return;
     
     setSelectedPage({
@@ -171,7 +170,6 @@ Email: info@renfayelashes.com</p>`,
       }
     }
     setSelectedPage(page);
-    setIsEditing(true);
     setHasChanges(false);
   };
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { FiLock, FiMail, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useAdmin } from '@/contexts/AdminContext';
 import Link from 'next/link';
@@ -12,7 +11,6 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAdmin();
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

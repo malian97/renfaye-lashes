@@ -73,7 +73,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       } else {
         toast.error(data.error || 'Invalid credentials');
       }
-    } catch (error) {
+    } catch {
       toast.error('Login failed. Please try again.');
     }
   };

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { contentManager, Order } from '@/lib/content-manager';
-import { FiPackage, FiClock, FiCheckCircle, FiXCircle, FiSearch, FiEye } from 'react-icons/fi';
+import { FiPackage, FiClock, FiCheckCircle, FiSearch, FiEye } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 export default function AdminOrders() {
@@ -54,18 +54,6 @@ export default function AdminOrders() {
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusIcon = (status: Order['status']) => {
-    switch (status) {
-      case 'pending':
-        return <FiClock className="w-4 h-4" />;
-      case 'processing':
-        return <FiPackage className="w-4 h-4" />;
-      case 'completed':
-        return <FiCheckCircle className="w-4 h-4" />;
-      case 'cancelled':
-        return <FiXCircle className="w-4 h-4" />;
-    }
-  };
 
   const getStatusColor = (status: Order['status']) => {
     switch (status) {

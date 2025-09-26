@@ -84,7 +84,7 @@ export default function AdminSettings() {
     toast.success('Settings saved successfully');
   };
 
-  const updateSettings = (field: string, value: any) => {
+  const updateSettings = (field: string, value: string) => {
     setSettings(prev => ({
       ...prev,
       [field]: value

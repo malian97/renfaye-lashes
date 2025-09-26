@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FiUploadCloud, FiX, FiImage } from 'react-icons/fi';
+import { FiUploadCloud, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 
@@ -38,7 +38,7 @@ export default function ImageUpload({ value, onChange, label = 'Upload Image' }:
         toast.success('Image uploaded successfully');
       };
       reader.readAsDataURL(file);
-    } catch (error) {
+    } catch {
       toast.error('Failed to upload image');
     } finally {
       setUploading(false);
