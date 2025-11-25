@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAppointment } from '@/lib/db';
+import Stripe from 'stripe';
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// Lazy initialize Stripe client
+let stripeClient: Stripe | null = null;
+function getStripeClient() {
+  if (!stripeClient && process.env.STRIPE_SECRET_KEY) {
+    stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-11-17.clover',
+    });
+  }
+  return stripeClient;
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const stripe = getStripeClient();
+    
+    if (!stripe) {
+      return NextResponse.json({ error: 'Payment processing not configured' }, { status: 503 });
+    }
+
     const { appointmentId } = await request.json();
     
     if (!appointmentId) {

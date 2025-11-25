@@ -2,14 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getOrders, saveOrders } from '@/lib/db';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-11-17.clover',
-});
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+// Lazy initialize Stripe client
+let stripeClient: Stripe | null = null;
+function getStripeClient() {
+  if (!stripeClient && process.env.STRIPE_SECRET_KEY) {
+    stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-11-17.clover',
+    });
+  }
+  return stripeClient;
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const stripe = getStripeClient();
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!stripe || !webhookSecret) {
+      console.warn('Stripe not configured');
+      return NextResponse.json({ error: 'Stripe not configured' }, { status: 503 });
+    }
+
     const body = await request.text();
     const signature = request.headers.get('stripe-signature');
 
