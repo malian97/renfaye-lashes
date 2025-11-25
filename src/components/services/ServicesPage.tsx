@@ -1,113 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { FiClock, FiDollarSign, FiCheck, FiCalendar } from 'react-icons/fi';
-
-interface Service {
-  id: number;
-  name: string;
-  description: string;
-  duration: string;
-  price: string;
-  image: string;
-  features: string[];
-  popular?: boolean;
-}
-
-const services: Service[] = [
-  {
-    id: 1,
-    name: 'Classic Lashes',
-    description: 'One extension applied to each natural lash for a natural, enhanced look.',
-    duration: '2-2.5 hours',
-    price: '$120-150',
-    image: 'https://picsum.photos/600/400?random=30',
-    features: [
-      'Natural enhancement',
-      'Perfect for everyday wear',
-      'Lightweight and comfortable',
-      'Lasts 4-6 weeks',
-      'Suitable for all eye shapes'
-    ]
-  },
-  {
-    id: 2,
-    name: 'Volume Lashes',
-    description: 'Multiple lightweight extensions fanned and applied to each natural lash.',
-    duration: '2.5-3 hours',
-    price: '$180-220',
-    image: 'https://picsum.photos/600/400?random=31',
-    features: [
-      'Dramatic, full look',
-      'Customizable volume',
-      'Ultra-lightweight',
-      'Perfect for special events',
-      'Lasts 5-7 weeks'
-    ],
-    popular: true
-  },
-  {
-    id: 3,
-    name: 'Hybrid Lashes',
-    description: 'Perfect combination of classic and volume techniques for textured fullness.',
-    duration: '2.5-3 hours',
-    price: '$160-190',
-    image: 'https://picsum.photos/600/400?random=32',
-    features: [
-      'Best of both worlds',
-      'Textured, dimensional look',
-      'Versatile styling',
-      'Natural yet full',
-      'Lasts 5-6 weeks'
-    ]
-  },
-  {
-    id: 4,
-    name: 'Lash Lift & Tint',
-    description: 'Curl and darken your natural lashes for a mascara-like effect.',
-    duration: '1-1.5 hours',
-    price: '$80-100',
-    image: 'https://picsum.photos/600/400?random=33',
-    features: [
-      'No extensions needed',
-      'Enhances natural lashes',
-      'Low maintenance',
-      'Waterproof results',
-      'Lasts 6-8 weeks'
-    ]
-  },
-  {
-    id: 5,
-    name: 'Lash Removal',
-    description: 'Safe and gentle removal of existing lash extensions.',
-    duration: '30-45 minutes',
-    price: '$30-50',
-    image: 'https://picsum.photos/600/400?random=34',
-    features: [
-      'Professional removal',
-      'Protects natural lashes',
-      'Gentle process',
-      'Includes aftercare advice',
-      'Prepares for new set'
-    ]
-  },
-  {
-    id: 6,
-    name: 'Touch-Up/Fill',
-    description: 'Maintain your lashes with regular fill appointments.',
-    duration: '1-1.5 hours',
-    price: '$60-90',
-    image: 'https://picsum.photos/600/400?random=35',
-    features: [
-      'Maintains fullness',
-      'Extends lash life',
-      'Cost-effective',
-      'Every 2-3 weeks',
-      'Quick refresh'
-    ]
-  }
-];
+import { contentManager, Service } from '@/lib/content-manager';
+import BookingModal from '@/components/booking/BookingModal';
 
 const processSteps = [
   {
@@ -133,6 +31,30 @@ const processSteps = [
 ];
 
 export default function ServicesPage() {
+  const [services, setServices] = useState<Service[]>([]);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Load services from content manager
+    const loadServices = async () => {
+      const loadedServices = await contentManager.getServices();
+      setServices(loadedServices);
+    };
+    
+    loadServices();
+  }, []);
+
+  const handleBookNow = (service: Service) => {
+    setSelectedService(service);
+    setIsBookingModalOpen(true);
+  };
+
+  const closeBookingModal = () => {
+    setIsBookingModalOpen(false);
+    setSelectedService(null);
+  };
+
   return (
     <div>
       {/* Hero Section */}
@@ -197,7 +119,7 @@ export default function ServicesPage() {
                     </div>
                     <div className="flex items-center space-x-2 text-pink-600 font-semibold">
                       <FiDollarSign className="w-4 h-4" />
-                      <span>{service.price}</span>
+                      <span>{typeof service.price === 'number' ? service.price.toFixed(2) : service.price}</span>
                     </div>
                   </div>
                   
@@ -210,7 +132,10 @@ export default function ServicesPage() {
                     ))}
                   </ul>
                   
-                  <button className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-full font-medium transition-colors duration-300 flex items-center justify-center space-x-2">
+                  <button 
+                    onClick={() => handleBookNow(service)}
+                    className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-full font-medium transition-colors duration-300 flex items-center justify-center space-x-2"
+                  >
                     <FiCalendar className="w-4 h-4" />
                     <span>Book Now</span>
                   </button>
@@ -278,6 +203,15 @@ export default function ServicesPage() {
 
       {/* Bottom Spacer */}
       <div className="py-12"></div>
+
+      {/* Booking Modal */}
+      {selectedService && (
+        <BookingModal
+          service={selectedService}
+          isOpen={isBookingModalOpen}
+          onClose={closeBookingModal}
+        />
+      )}
     </div>
   );
 }

@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { FiSave, FiMail, FiPhone, FiMapPin, FiClock, FiFacebook, FiInstagram, FiTwitter } from 'react-icons/fi';
+import { contentManager, StoreSettings } from '@/lib/content-manager';
+import { FiSave, FiMail, FiPhone, FiMapPin, FiClock, FiFacebook, FiInstagram, FiTwitter, FiDollarSign, FiShoppingCart } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 interface SiteSettings {
@@ -37,6 +38,8 @@ export default function AdminSettings() {
   const { isAdmin, isLoading } = useAdmin();
   const router = useRouter();
   const [hasChanges, setHasChanges] = useState(false);
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
+  const [loadingStore, setLoadingStore] = useState(true);
   
   const [settings, setSettings] = useState<SiteSettings>({
     businessName: 'RENFAYE LASHES',
@@ -76,10 +79,49 @@ export default function AdminSettings() {
     if (savedSettings) {
       setSettings(JSON.parse(savedSettings));
     }
+    
+    // Load store settings from API
+    loadStoreSettings();
   }, []);
 
-  const handleSave = () => {
+  const loadStoreSettings = async () => {
+    try {
+      const data = await contentManager.getStoreSettings();
+      setStoreSettings(data);
+      // Load social media from store settings if available
+      if (data.socialMedia) {
+        setSettings(prev => ({
+          ...prev,
+          social: {
+            facebook: data.socialMedia?.facebook || '',
+            instagram: data.socialMedia?.instagram || '',
+            twitter: data.socialMedia?.twitter || ''
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading store settings:', error);
+      toast.error('Failed to load store settings');
+    } finally {
+      setLoadingStore(false);
+    }
+  };
+
+  const handleSave = async () => {
     localStorage.setItem('renfaye_settings', JSON.stringify(settings));
+    
+    // Also save social media to store settings (server)
+    if (storeSettings) {
+      try {
+        await contentManager.saveStoreSettings({
+          ...storeSettings,
+          socialMedia: settings.social
+        });
+      } catch (error) {
+        console.error('Error saving social media to server:', error);
+      }
+    }
+    
     setHasChanges(false);
     toast.success('Settings saved successfully');
   };
@@ -125,6 +167,25 @@ export default function AdminSettings() {
     setHasChanges(true);
   };
 
+  const handleSaveStoreSettings = async () => {
+    if (!storeSettings) return;
+    
+    try {
+      await contentManager.saveStoreSettings(storeSettings);
+      toast.success('Store settings saved successfully');
+    } catch (error) {
+      console.error('Error saving store settings:', error);
+      toast.error('Failed to save store settings');
+    }
+  };
+
+  const updateStoreSettings = (field: keyof StoreSettings, value: string | number) => {
+    setStoreSettings(prev => prev ? {
+      ...prev,
+      [field]: value
+    } : null);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -154,6 +215,59 @@ export default function AdminSettings() {
             </button>
           )}
         </div>
+
+        {/* Store Settings (E-commerce) */}
+        {!loadingStore && storeSettings && (
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">
+                <FiShoppingCart className="inline mr-2" />
+                Store Settings
+              </h2>
+              <button
+                onClick={handleSaveStoreSettings}
+                className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition-colors flex items-center text-sm"
+              >
+                <FiSave className="mr-2" />
+                Save Store Settings
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <FiDollarSign className="inline mr-1" />
+                  Shipping Cost ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={storeSettings.shippingCost}
+                  onChange={(e) => updateStoreSettings('shippingCost', parseFloat(e.target.value) || 0)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Flat rate shipping cost for all orders</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tax Rate (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={storeSettings.taxRate}
+                  onChange={(e) => updateStoreSettings('taxRate', parseFloat(e.target.value) || 0)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Sales tax percentage (0 for no tax)</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Business Information */}
         <div className="bg-white rounded-xl shadow-md p-6">

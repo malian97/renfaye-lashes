@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FaFacebook, FaInstagram, FaPinterest, FaTwitter } from 'react-icons/fa';
 
@@ -14,8 +17,6 @@ const footerLinks = [
   {
     title: 'Support',
     links: [
-      { name: 'FAQs', href: '/faq' },
-      { name: 'Shipping & Returns', href: '/shipping-returns' },
       { name: 'Size Guide', href: '/size-guide' },
       { name: 'Contact Us', href: '/contact' },
     ],
@@ -24,14 +25,35 @@ const footerLinks = [
     title: 'Company',
     links: [
       { name: 'About Us', href: '/about' },
-      { name: 'Our Story', href: '/our-story' },
-      { name: 'Blog', href: '/blog' },
-      { name: 'Careers', href: '/careers' },
+      { name: 'Careers', href: '/contact' },
     ],
   },
 ];
 
 export default function Footer() {
+  const [socialMedia, setSocialMedia] = useState({
+    facebook: '#',
+    instagram: '#',
+    twitter: '#'
+  });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const settings = await response.json();
+          if (settings.socialMedia) {
+            setSocialMedia(settings.socialMedia);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading social media settings:', error);
+      }
+    };
+    loadSettings();
+  }, []);
+
   return (
     <footer className="bg-gray-900 text-white pt-20 pb-12">
       <div className="container mx-auto px-4">
@@ -44,18 +66,21 @@ export default function Footer() {
               Discover the perfect lashes for a glamorous look that lasts.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <FaFacebook className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <FaInstagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <FaPinterest className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <FaTwitter className="w-5 h-5" />
-              </a>
+              {socialMedia.facebook && socialMedia.facebook !== '#' && socialMedia.facebook.trim() !== '' && (
+                <a href={socialMedia.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                  <FaFacebook className="w-5 h-5" />
+                </a>
+              )}
+              {socialMedia.instagram && socialMedia.instagram !== '#' && socialMedia.instagram.trim() !== '' && (
+                <a href={socialMedia.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                  <FaInstagram className="w-5 h-5" />
+                </a>
+              )}
+              {socialMedia.twitter && socialMedia.twitter !== '#' && socialMedia.twitter.trim() !== '' && (
+                <a href={socialMedia.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                  <FaTwitter className="w-5 h-5" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -84,8 +109,7 @@ export default function Footer() {
           <p className="text-gray-500 text-sm mb-4 md:mb-0">
             &copy; {new Date().getFullYear()} RENFAYE LASHES. All rights reserved.
           </p>
-          <div className="flex space-x-6
-          ">
+          <div className="flex space-x-6">
             <Link href="/privacy-policy" className="text-gray-500 hover:text-white text-sm transition-colors">
               Privacy Policy
             </Link>

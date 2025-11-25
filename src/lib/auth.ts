@@ -1,10 +1,8 @@
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { getAdminCredentials, verifyAdminPassword } from './db';
 
 // In production, store this in environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@renfayelashes.com';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || bcrypt.hashSync('admin123', 10);
 
 export interface AdminUser {
   id: string;
@@ -13,14 +11,17 @@ export interface AdminUser {
 }
 
 export async function verifyCredentials(email: string, password: string): Promise<AdminUser | null> {
-  // In production, this would check against a database
-  if (email === ADMIN_EMAIL && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
+  const isValid = await verifyAdminPassword(email, password);
+  
+  if (isValid) {
+    const admin = await getAdminCredentials();
     return {
-      id: '1',
-      email: ADMIN_EMAIL,
-      name: 'Admin'
+      id: admin.id,
+      email: admin.email,
+      name: admin.name
     };
   }
+  
   return null;
 }
 

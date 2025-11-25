@@ -1,0 +1,46 @@
+[
+  {
+    "id": "1",
+    "name": "Classic Volume Lashes",
+    "price": 39.99,
+    "originalPrice": 69.99,
+    "description": "Beautiful classic volume lashes for a natural yet enhanced look",
+    "category": "Volume Lashes",
+    "image": "https://picsum.photos/600/800?random=1",
+    "inStock": true,
+    "featured": true,
+    "bestSeller": true,
+    "createdAt": "2025-11-24T03:17:20.106Z",
+    "updatedAt": "2025-11-24T21:42:34.768Z"
+  },
+  {
+    "id": "2",
+    "name": "Hybrid Volume Set",
+    "price": 59.99,
+    "originalPrice": 79.99,
+    "description": "Perfect blend of classic and volume techniques",
+    "category": "Hybrid Lashes",
+    "image": "https://picsum.photos/600/800?random=2",
+    "inStock": true,
+    "featured": true,
+    "bestSeller": false,
+    "createdAt": "2025-11-24T03:17:20.106Z",
+    "updatedAt": "2025-11-24T03:17:20.106Z"
+  },
+  {
+    "id": "3",
+    "name": "Mega Volume Set",
+    "price": 69.99,
+    "originalPrice": 89.99,
+    "description": "Maximum volume for dramatic, glamorous look",
+    "category": "Volume Lashes",
+    "image": "https://picsum.photos/600/800?random=3",
+    "features": [],
+    "specifications": {},
+    "inStock": true,
+    "featured": true,
+    "bestSeller": false,
+    "createdAt": "2025-11-24T03:17:20.106Z",
+    "updatedAt": "2025-11-25T02:44:37.141Z"
+  }
+]

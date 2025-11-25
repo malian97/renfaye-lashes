@@ -98,6 +98,11 @@ export default function AdminLogin() {
                 ← Back to website
               </Link>
             </div>
+            <div className="text-sm">
+              <Link href="/admin/forgot-password" className="font-medium text-pink-600 hover:text-pink-500">
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <button

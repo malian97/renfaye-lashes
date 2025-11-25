@@ -27,16 +27,20 @@ export default function AdminProducts() {
     loadProducts();
   }, []);
 
-  const loadProducts = () => {
-    const allProducts = contentManager.getProducts();
+  const loadProducts = async () => {
+    const allProducts = await contentManager.getProducts();
     setProducts(allProducts);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      contentManager.deleteProduct(id);
-      loadProducts();
-      toast.success('Product deleted successfully');
+      try {
+        await contentManager.deleteProduct(id);
+        await loadProducts();
+        toast.success('Product deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete product');
+      }
     }
   };
 

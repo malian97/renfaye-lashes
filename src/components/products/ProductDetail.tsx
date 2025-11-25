@@ -16,6 +16,7 @@ interface Product {
   description: string;
   features: string[];
   specifications: Record<string, string>;
+  careInstructions?: string[];
   inStock: boolean;
   rating: number;
   reviewCount: number;
@@ -215,11 +216,19 @@ export default function ProductDetail({ product }: ProductDetailProps) {
             <div className="bg-gray-50 rounded-lg p-6">
               <h3 className="font-semibold mb-4">Care Instructions</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>• Avoid oil-based products around the eye area</li>
-                <li>• Gently cleanse with lash-safe cleanser</li>
-                <li>• Brush lashes daily with a clean spoolie</li>
-                <li>• Sleep on your back when possible</li>
-                <li>• Schedule touch-ups every 2-3 weeks</li>
+                {product.careInstructions && product.careInstructions.length > 0 ? (
+                  product.careInstructions.map((instruction, index) => (
+                    <li key={index}>• {instruction}</li>
+                  ))
+                ) : (
+                  <>
+                    <li>• Avoid oil-based products around the eye area</li>
+                    <li>• Gently cleanse with lash-safe cleanser</li>
+                    <li>• Brush lashes daily with a clean spoolie</li>
+                    <li>• Sleep on your back when possible</li>
+                    <li>• Schedule touch-ups every 2-3 weeks</li>
+                  </>
+                )}
               </ul>
             </div>
           </div>

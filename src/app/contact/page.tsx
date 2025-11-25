@@ -1,26 +1,48 @@
-import ContactForm from '@/components/contact/ContactForm';
-import { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Contact Us | RENFAYE LASHES',
-  description: 'Get in touch with RENFAYE LASHES. Book your appointment or ask questions about our premium eyelash extension services.',
-};
+import ContactForm from '@/components/contact/ContactForm';
+import { contentManager } from '@/lib/content-manager';
+import { useEffect, useState } from 'react';
 
 export default function ContactPage() {
+  const [content, setContent] = useState<any>(null);
+
+  useEffect(() => {
+    const loadContent = async () => {
+      const siteContent = await contentManager.getSiteContent();
+      setContent(siteContent);
+    };
+    loadContent();
+  }, []);
+
+  if (!content) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-32">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
+
+  // Provide default values if fields are missing
+  const contactInfo = {
+    phone: content.contact.phone || '(555) 123-4567',
+    email: content.contact.email || 'info@renfayelashes.com',
+    address: content.contact.address || '123 Beauty Lane, Suite 100, New York, NY 10001',
+    hours: content.contact.hours || 'Mon-Fri: 9:00 AM - 7:00 PM\nSat: 10:00 AM - 6:00 PM\nSun: Closed'
+  };
+
   return (
     <div className="pt-32 pb-16">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-bold mb-8">Contact Us</h1>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-bold mb-8">{content.contact.title}</h1>
           <p className="text-xl sm:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-            Ready to enhance your natural beauty? Get in touch with our expert team to book your appointment or ask any questions about our premium eyelash extension services.
+            {content.contact.subtitle}
           </p>
         </div>
         
-        {/* Spacer */}
-        <div className="py-8"></div>
-        
-        <ContactForm />
+        {/* Contact Form with Contact Info */}
+        <ContactForm contactInfo={contactInfo} />
         
         {/* Bottom Spacer */}
         <div className="py-12"></div>

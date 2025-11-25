@@ -27,17 +27,21 @@ export default function AdminOrders() {
     loadOrders();
   }, []);
 
-  const loadOrders = () => {
-    const allOrders = contentManager.getOrders();
+  const loadOrders = async () => {
+    const allOrders = await contentManager.getOrders();
     // Sort by date, newest first
     allOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     setOrders(allOrders);
   };
 
-  const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
-    contentManager.updateOrderStatus(orderId, newStatus);
-    loadOrders();
-    toast.success('Order status updated');
+  const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
+    try {
+      await contentManager.updateOrderStatus(orderId, newStatus);
+      await loadOrders();
+      toast.success('Order status updated');
+    } catch (error) {
+      toast.error('Failed to update order status');
+    }
   };
 
   const viewOrderDetails = (order: Order) => {

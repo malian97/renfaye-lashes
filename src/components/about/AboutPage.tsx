@@ -1,82 +1,30 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 import { FiAward, FiHeart, FiUsers, FiStar, FiTarget, FiEye } from 'react-icons/fi';
-
-const stats = [
-  {
-    icon: FiUsers,
-    number: '5000+',
-    label: 'Happy Clients',
-    description: 'Satisfied customers worldwide'
-  },
-  {
-    icon: FiAward,
-    number: '8+',
-    label: 'Years Experience',
-    description: 'In the beauty industry'
-  },
-  {
-    icon: FiHeart,
-    number: '99%',
-    label: 'Client Satisfaction',
-    description: 'Based on customer reviews'
-  },
-  {
-    icon: FiStar,
-    number: '4.9/5',
-    label: 'Average Rating',
-    description: 'From verified reviews'
-  }
-];
-
-const team = [
-  {
-    id: 1,
-    name: 'Sarah Mitchell',
-    role: 'Founder & Lead Technician',
-    image: 'https://picsum.photos/300/400?random=60',
-    bio: 'With over 8 years of experience in the beauty industry, Sarah founded RENFAYE LASHES with a vision to provide premium eyelash extension services.',
-    certifications: ['Certified Lash Artist', 'Volume Lash Specialist', 'Lash Lift Certified']
-  },
-  {
-    id: 2,
-    name: 'Emily Chen',
-    role: 'Senior Lash Technician',
-    image: 'https://picsum.photos/300/400?random=61',
-    bio: 'Emily specializes in volume and mega volume techniques, creating stunning dramatic looks while maintaining the health of natural lashes.',
-    certifications: ['Volume Lash Expert', 'Classic Lash Certified', 'Hybrid Specialist']
-  },
-  {
-    id: 3,
-    name: 'Maria Rodriguez',
-    role: 'Lash Artist & Trainer',
-    image: 'https://picsum.photos/300/400?random=62',
-    bio: 'Maria combines her artistic background with technical expertise to create beautiful, customized lash looks for each client.',
-    certifications: ['Master Lash Artist', 'Lash Trainer', 'Color Theory Certified']
-  }
-];
-
-const values = [
-  {
-    icon: FiEye,
-    title: 'Excellence',
-    description: 'We strive for perfection in every lash application, using only the finest materials and latest techniques.'
-  },
-  {
-    icon: FiHeart,
-    title: 'Care',
-    description: 'Your comfort and satisfaction are our top priorities. We provide a relaxing, luxurious experience.'
-  },
-  {
-    icon: FiTarget,
-    title: 'Innovation',
-    description: 'We stay current with the latest trends and techniques to offer you the most advanced lash services.'
-  }
-];
+import { contentManager, SiteContent } from '@/lib/content-manager';
 
 export default function AboutPage() {
+  const [content, setContent] = useState<SiteContent | null>(null);
+
+  useEffect(() => {
+    const loadContent = async () => {
+      const data = await contentManager.getSiteContent();
+      setContent(data);
+    };
+    loadContent();
+  }, []);
+
+  if (!content) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
   return (
     <div className="pb-16">
       {/* Hero Section */}
@@ -88,18 +36,24 @@ export default function AboutPage() {
             transition={{ duration: 0.6 }}
             className="max-w-5xl mx-auto"
           >
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-bold mb-8">About RENFAYE LASHES</h1>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-bold mb-8">{content.about.title}</h1>
             <p className="text-xl sm:text-2xl text-gray-600 mb-10 max-w-4xl mx-auto">
-              Founded with a passion for enhancing natural beauty, RENFAYE LASHES has become a trusted name in premium eyelash extensions. We believe that every woman deserves to feel confident and beautiful.
+              {content.about.description}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
-              <button className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-full font-medium transition-colors">
-                Book Consultation
-              </button>
-              <button className="border-2 border-pink-600 text-pink-600 hover:bg-pink-600 hover:text-white px-8 py-4 rounded-full font-medium transition-colors">
-                View Gallery
-              </button>
-            </div>
+            {content.about.cta && (
+              <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
+                <Link href={content.about.cta.primaryButtonLink}>
+                  <button className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-full font-medium transition-colors w-full sm:w-auto">
+                    {content.about.cta.primaryButtonText}
+                  </button>
+                </Link>
+                <Link href={content.about.cta.secondaryButtonLink}>
+                  <button className="border-2 border-pink-600 text-pink-600 hover:bg-pink-600 hover:text-white px-8 py-4 rounded-full font-medium transition-colors w-full sm:w-auto">
+                    {content.about.cta.secondaryButtonText}
+                  </button>
+                </Link>
+              </div>
+            )}
           </motion.div>
         </div>
       </section>
@@ -110,24 +64,28 @@ export default function AboutPage() {
       {/* Stats Section */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <stat.icon className="w-8 h-8 text-pink-600" />
-                </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</h3>
-                <p className="font-semibold text-gray-900 mb-1">{stat.label}</p>
-                <p className="text-sm text-gray-600">{stat.description}</p>
-              </motion.div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {content.about.stats.map((stat, index) => {
+              const icons = [FiUsers, FiAward, FiHeart, FiStar];
+              const Icon = icons[index % icons.length];
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="text-center"
+                >
+                  <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Icon className="w-8 h-8 text-pink-600" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</h3>
+                  <p className="font-semibold text-gray-900 mb-1">{stat.label}</p>
+                  <p className="text-sm text-gray-600">{stat.description}</p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -145,23 +103,27 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {values.map((value, index) => (
-              <motion.div
-                key={value.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center p-8 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow"
-              >
-                <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <value.icon className="w-8 h-8 text-pink-600" />
-                </div>
-                <h3 className="text-xl font-semibold mb-4">{value.title}</h3>
-                <p className="text-gray-600">{value.description}</p>
-              </motion.div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {content.about.values && content.about.values.map((value, index) => {
+              const icons = [FiEye, FiHeart, FiTarget];
+              const Icon = icons[index % icons.length];
+              return (
+                <motion.div
+                  key={value.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="text-center p-8 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Icon className="w-8 h-8 text-pink-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-4">{value.title}</h3>
+                  <p className="text-gray-600">{value.description}</p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -179,8 +141,8 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {team.map((member, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {content.about.team && content.about.team.map((member, index) => (
               <motion.div
                 key={member.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -218,22 +180,28 @@ export default function AboutPage() {
       <div className="py-12"></div>
 
       {/* CTA Section */}
-      <section className="py-20 bg-pink-600 text-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-serif font-bold mb-6">Experience the RENFAYE Difference</h2>
-          <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Join thousands of satisfied clients who trust us with their lash needs. Book your appointment today and discover why we&apos;re the premier choice for eyelash extensions.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-lg mx-auto">
-            <button className="bg-white text-pink-600 hover:bg-gray-100 px-8 py-4 rounded-full font-medium transition-colors duration-300">
-              Book Now
-            </button>
-            <button className="border-2 border-white text-white hover:bg-white hover:text-pink-600 px-8 py-4 rounded-full font-medium transition-colors duration-300">
-              Free Consultation
-            </button>
+      {content.about.cta && (
+        <section className="py-20 bg-pink-600 text-white">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+            <h2 className="text-4xl font-serif font-bold mb-6">{content.about.cta.title}</h2>
+            <p className="text-xl mb-8 max-w-3xl mx-auto">
+              {content.about.cta.description}
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-lg mx-auto">
+              <Link href={content.about.cta.primaryButtonLink}>
+                <button className="bg-white text-pink-600 hover:bg-gray-100 px-8 py-4 rounded-full font-medium transition-colors duration-300 w-full sm:w-auto">
+                  {content.about.cta.primaryButtonText}
+                </button>
+              </Link>
+              <Link href={content.about.cta.secondaryButtonLink}>
+                <button className="border-2 border-white text-white hover:bg-white hover:text-pink-600 px-8 py-4 rounded-full font-medium transition-colors duration-300 w-full sm:w-auto">
+                  {content.about.cta.secondaryButtonText}
+                </button>
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Bottom Spacer */}
       <div className="py-12"></div>

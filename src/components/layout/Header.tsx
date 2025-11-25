@@ -2,14 +2,18 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
-import { FiMenu, FiX, FiShoppingCart, FiUser, FiSearch } from 'react-icons/fi';
+import { useState, useEffect, useRef } from 'react';
+import { FiMenu, FiX, FiShoppingCart, FiUser, FiSearch, FiLogOut, FiSettings } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
+import { useUser } from '@/contexts/UserContext';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { state, toggleCart } = useCart();
+  const { user, isAuthenticated, logout } = useUser();
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +24,18 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Shop', href: '/shop' },
@@ -27,6 +43,7 @@ export default function Header() {
     { name: 'Gallery', href: '/gallery' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
+    { name: 'Policy', href: '/policy' },
   ];
 
   return (
@@ -39,7 +56,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center flex-shrink-0 mr-8">
-            <div className="relative w-12 h-12 lg:w-16 lg:h-16">
+            <div className="relative w-16 h-16 lg:w-20 lg:h-20">
               <Image
                 src="/images/logo.jpeg"
                 alt="RENFAYE LASHES"
@@ -48,7 +65,7 @@ export default function Header() {
                 priority
               />
             </div>
-            <span className="ml-3 text-lg lg:text-xl font-bold font-serif text-gray-900 hidden sm:block">
+            <span className="ml-3 text-xl lg:text-3xl font-bold font-serif text-gray-900 hidden sm:block">
               RENFAYE LASHES
             </span>
           </Link>
@@ -74,9 +91,68 @@ export default function Header() {
             <button className="hidden lg:flex p-3 text-gray-700 hover:text-pink-500 transition-colors">
               <FiSearch className="w-6 h-6" />
             </button>
-            <button className="hidden lg:flex p-3 text-gray-700 hover:text-pink-500 transition-colors">
-              <FiUser className="w-6 h-6" />
-            </button>
+            
+            {/* User Menu */}
+            <div className="hidden lg:block relative" ref={userMenuRef}>
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="p-3 text-gray-700 hover:text-pink-500 transition-colors"
+              >
+                <FiUser className="w-6 h-6" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  {isAuthenticated && user ? (
+                    <>
+                      <div className="px-4 py-3 border-b border-gray-200">
+                        <p className="text-sm font-semibold text-gray-900">
+                          {user.firstName} {user.lastName}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{user.email}</p>
+                      </div>
+                      <Link
+                        href="/account"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-600 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <FiSettings className="mr-3" />
+                        My Account
+                      </Link>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <FiLogOut className="mr-3" />
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-600 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        href="/register"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-600 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Create Account
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
             <button 
               onClick={toggleCart}
               className="p-3 text-gray-700 hover:text-pink-500 transition-colors relative"

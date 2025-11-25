@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import { 
   FiHome, FiPackage, FiShoppingCart, FiEdit, FiImage, 
-  FiFileText, FiSettings, FiLogOut, FiMenu, FiX, FiUser 
+  FiFileText, FiSettings, FiLogOut, FiMenu, FiX, FiUser, FiClock, FiMail, FiCalendar, FiUsers 
 } from 'react-icons/fi';
 
 interface AdminLayoutProps {
@@ -20,8 +20,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: FiHome },
+    { name: 'Users', href: '/admin/users', icon: FiUsers },
     { name: 'Products', href: '/admin/products', icon: FiPackage },
+    { name: 'Services', href: '/admin/services', icon: FiClock },
+    { name: 'Bookings', href: '/admin/bookings', icon: FiCalendar },
+    { name: 'Schedule', href: '/admin/schedule', icon: FiCalendar },
     { name: 'Orders', href: '/admin/orders', icon: FiShoppingCart },
+    { name: 'Contact Submissions', href: '/admin/contact-submissions', icon: FiMail },
     { name: 'Content', href: '/admin/content', icon: FiEdit },
     { name: 'Media', href: '/admin/media', icon: FiImage },
     { name: 'Pages', href: '/admin/pages', icon: FiFileText },
@@ -83,6 +88,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
           </div>
+          <Link
+            href="/admin/account"
+            className="flex items-center w-full px-3 py-2 mb-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <FiUser className="w-5 h-5 mr-3" />
+            Account Settings
+          </Link>
           <button
             onClick={logout}
             className="flex items-center w-full px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"

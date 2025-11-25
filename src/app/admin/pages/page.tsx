@@ -25,6 +25,7 @@ export default function AdminPages() {
   const [pages, setPages] = useState<PageContent[]>([]);
   const [selectedPage, setSelectedPage] = useState<PageContent | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
@@ -36,109 +37,44 @@ export default function AdminPages() {
     loadPages();
   }, []);
 
-  const loadPages = () => {
-    const stored = localStorage.getItem('renfaye_pages');
-    if (stored) {
-      setPages(JSON.parse(stored));
-    } else {
-      // Default pages
-      const defaultPages: PageContent[] = [
-        {
-          id: '1',
-          title: 'About Us',
-          slug: 'about',
-          content: `<h1>About RENFAYE LASHES</h1>
-<p>Welcome to RENFAYE LASHES, where beauty meets excellence. With over 8 years of experience in the beauty industry, we've perfected the art of eyelash extensions.</p>
-
-<h2>Our Mission</h2>
-<p>To enhance your natural beauty with premium eyelash extensions that make you feel confident and glamorous every day.</p>
-
-<h2>Our Values</h2>
-<ul>
-  <li>Quality: We use only the finest materials</li>
-  <li>Excellence: Our technicians are highly trained</li>
-  <li>Customer First: Your satisfaction is our priority</li>
-</ul>`,
-          metaTitle: 'About Us | RENFAYE LASHES',
-          metaDescription: 'Learn about RENFAYE LASHES and our commitment to beauty excellence.',
-          lastModified: new Date().toISOString(),
-          status: 'published'
-        },
-        {
-          id: '2',
-          title: 'Services',
-          slug: 'services',
-          content: `<h1>Our Services</h1>
-<p>Discover our range of premium eyelash extension services designed to enhance your natural beauty.</p>`,
-          metaTitle: 'Services | RENFAYE LASHES',
-          metaDescription: 'Explore our premium eyelash extension services.',
-          lastModified: new Date().toISOString(),
-          status: 'published'
-        },
-        {
-          id: '3',
-          title: 'Gallery',
-          slug: 'gallery',
-          content: `<h1>Gallery</h1>
-<p>Browse our collection of stunning transformations and see the artistry of our lash extensions.</p>`,
-          metaTitle: 'Gallery | RENFAYE LASHES',
-          metaDescription: 'View our gallery of beautiful eyelash extensions.',
-          lastModified: new Date().toISOString(),
-          status: 'published'
-        },
-        {
-          id: '4',
-          title: 'Contact',
-          slug: 'contact',
-          content: `<h1>Contact Us</h1>
-<p>Get in touch with us to book your appointment or ask any questions.</p>
-
-<h2>Location</h2>
-<p>123 Beauty Lane<br>
-New York, NY 10001</p>
-
-<h2>Hours</h2>
-<p>Monday - Friday: 9:00 AM - 7:00 PM<br>
-Saturday: 10:00 AM - 5:00 PM<br>
-Sunday: Closed</p>
-
-<h2>Contact</h2>
-<p>Phone: (555) 123-4567<br>
-Email: info@renfayelashes.com</p>`,
-          metaTitle: 'Contact Us | RENFAYE LASHES',
-          metaDescription: 'Contact RENFAYE LASHES for appointments and inquiries.',
-          lastModified: new Date().toISOString(),
-          status: 'published'
-        },
-        {
-          id: '5',
-          title: 'Privacy Policy',
-          slug: 'privacy-policy',
-          content: `<h1>Privacy Policy</h1>
-<p>Your privacy is important to us. This policy outlines how we collect, use, and protect your information.</p>`,
-          metaTitle: 'Privacy Policy | RENFAYE LASHES',
-          metaDescription: 'Privacy policy for RENFAYE LASHES website.',
-          lastModified: new Date().toISOString(),
-          status: 'published'
-        },
-        {
-          id: '6',
-          title: 'Terms of Service',
-          slug: 'terms',
-          content: `<h1>Terms of Service</h1>
-<p>By using our website and services, you agree to these terms and conditions.</p>`,
-          metaTitle: 'Terms of Service | RENFAYE LASHES',
-          metaDescription: 'Terms of service for RENFAYE LASHES.',
-          lastModified: new Date().toISOString(),
-          status: 'published'
-        }
-      ];
-      setPages(defaultPages);
-      localStorage.setItem('renfaye_pages', JSON.stringify(defaultPages));
+  const loadPages = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/pages');
+      if (response.ok) {
+        const data = await response.json();
+        setPages(data);
+      } else {
+        toast.error('Failed to load pages');
+      }
+    } catch (error) {
+      console.error('Error loading pages:', error);
+      toast.error('Failed to load pages');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSave = () => {
+  const savePagesToServer = async (updatedPages: PageContent[]) => {
+    try {
+      const response = await fetch('/api/pages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedPages)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save pages');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error saving pages:', error);
+      return false;
+    }
+  };
+
+  const handleSave = async () => {
     if (!selectedPage) return;
     
     const updatedPages = pages.map(page => 
@@ -147,10 +83,15 @@ Email: info@renfayelashes.com</p>`,
         : page
     );
     
-    setPages(updatedPages);
-    localStorage.setItem('renfaye_pages', JSON.stringify(updatedPages));
-    setHasChanges(false);
-    toast.success('Page saved successfully');
+    const saved = await savePagesToServer(updatedPages);
+    
+    if (saved) {
+      setPages(updatedPages);
+      setHasChanges(false);
+      toast.success('Page saved successfully');
+    } else {
+      toast.error('Failed to save page');
+    }
   };
 
   const updateSelectedPage = (field: keyof PageContent, value: string) => {
@@ -173,7 +114,7 @@ Email: info@renfayelashes.com</p>`,
     setHasChanges(false);
   };
 
-  if (isLoading) {
+  if (isLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>

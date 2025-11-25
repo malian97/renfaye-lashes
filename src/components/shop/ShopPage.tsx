@@ -1,92 +1,47 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiGrid, FiList, FiStar } from 'react-icons/fi';
+import { FiGrid, FiList } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  category: string;
-  rating: number;
-  reviewCount: number;
-  isNew?: boolean;
-  isBestSeller?: boolean;
-}
-
-const products: Product[] = [
-  {
-    id: 1,
-    name: 'Classic Volume Lashes',
-    price: 49.99,
-    image: 'https://picsum.photos/400/500?random=2',
-    category: 'Volume Lashes',
-    rating: 4.9,
-    reviewCount: 127,
-    isBestSeller: true,
-  },
-  {
-    id: 2,
-    name: 'Hybrid Volume Set',
-    price: 59.99,
-    image: 'https://picsum.photos/400/500?random=5',
-    category: 'Hybrid Lashes',
-    rating: 4.8,
-    reviewCount: 89,
-    isNew: true,
-  },
-  {
-    id: 3,
-    name: 'Mega Volume Set',
-    price: 69.99,
-    image: 'https://picsum.photos/400/500?random=8',
-    category: 'Volume Lashes',
-    rating: 4.9,
-    reviewCount: 156,
-  },
-  {
-    id: 4,
-    name: 'Natural Classic Lashes',
-    price: 39.99,
-    originalPrice: 49.99,
-    image: 'https://picsum.photos/400/500?random=20',
-    category: 'Classic Lashes',
-    rating: 4.7,
-    reviewCount: 98,
-  },
-  {
-    id: 5,
-    name: 'Dramatic Volume Lashes',
-    price: 79.99,
-    image: 'https://picsum.photos/400/500?random=21',
-    category: 'Volume Lashes',
-    rating: 4.8,
-    reviewCount: 134,
-    isNew: true,
-  },
-  {
-    id: 6,
-    name: 'Cat Eye Lashes',
-    price: 54.99,
-    image: 'https://picsum.photos/400/500?random=22',
-    category: 'Specialty Lashes',
-    rating: 4.6,
-    reviewCount: 76,
-  },
-];
-
-const categories = ['All', 'Classic Lashes', 'Volume Lashes', 'Hybrid Lashes', 'Specialty Lashes'];
+import { contentManager, Product } from '@/lib/content-manager';
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('featured');
   const { addItem } = useCart();
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      const allProducts = await contentManager.getProducts();
+      // Only show products that are in stock
+      const availableProducts = allProducts.filter(p => p.inStock);
+      setProducts(availableProducts);
+    } catch (error) {
+      console.error('Error loading products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get unique categories from products
+  const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
 
   const filteredProducts = products.filter(product => 
     selectedCategory === 'All' || product.category === selectedCategory
@@ -98,10 +53,10 @@ export default function ShopPage() {
         return a.price - b.price;
       case 'price-high':
         return b.price - a.price;
-      case 'rating':
-        return b.rating - a.rating;
+      case 'featured':
+        return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
       case 'newest':
-        return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       default:
         return 0;
     }
@@ -109,7 +64,7 @@ export default function ShopPage() {
 
   const handleAddToCart = (product: Product) => {
     addItem({
-      id: product.id,
+      id: parseInt(product.id),
       name: product.name,
       price: product.price,
       image: product.image,
@@ -164,7 +119,6 @@ export default function ShopPage() {
               <option value="newest">Newest</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
-              <option value="rating">Highest Rated</option>
             </select>
 
             {/* View Mode */}
@@ -186,12 +140,18 @@ export default function ShopPage() {
         </div>
 
         {/* Products Grid/List */}
-        <div className={`${
-          viewMode === 'grid' 
-            ? 'grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8 lg:gap-10' 
-            : 'space-y-6 sm:space-y-8'
-        }`}>
-          {sortedProducts.map((product) => (
+        {sortedProducts.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-xl text-gray-600 mb-4">No products found in this category</p>
+            <p className="text-gray-500">Try selecting a different category or check back later</p>
+          </div>
+        ) : (
+          <div className={`${
+            viewMode === 'grid' 
+              ? 'grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8 lg:gap-10' 
+              : 'space-y-6 sm:space-y-8'
+          }`}>
+            {sortedProducts.map((product) => (
             <div
               key={product.id}
               className={`group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 ${
@@ -211,12 +171,12 @@ export default function ShopPage() {
                 
                 {/* Badges */}
                 <div className="absolute top-2 sm:top-4 left-2 sm:left-4 space-y-1 sm:space-y-2">
-                  {product.isNew && (
+                  {product.featured && (
                     <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full">
-                      New
+                      Featured
                     </span>
                   )}
-                  {product.isBestSeller && (
+                  {product.bestSeller && (
                     <span className="bg-orange-500 text-white text-xs font-medium px-2 py-1 rounded-full">
                       Best Seller
                     </span>
@@ -243,23 +203,13 @@ export default function ShopPage() {
                   </Link>
                 </h3>
                 
-                {/* Rating */}
-                <div className="flex items-center space-x-1 mb-2 sm:mb-3">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <FiStar
-                        key={i}
-                        className={`w-3 h-3 sm:w-4 sm:h-4 ${
-                          i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs sm:text-sm text-gray-600">({product.reviewCount})</span>
-                </div>
+                {/* Description */}
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2">
+                  {product.description}
+                </p>
 
                 {/* Price */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mt-auto">
                   <div className="flex items-center space-x-2">
                     <span className="text-base sm:text-lg font-bold">${product.price.toFixed(2)}</span>
                     {product.originalPrice && (
@@ -278,7 +228,8 @@ export default function ShopPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Spacer */}
         <div className="py-12"></div>

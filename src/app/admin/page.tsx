@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { FiPackage, FiShoppingCart, FiUsers, FiTrendingUp, FiEdit, FiImage, FiFileText, FiSettings } from 'react-icons/fi';
+import { FiPackage, FiShoppingCart, FiUsers, FiTrendingUp, FiEdit, FiImage, FiFileText, FiSettings, FiClock, FiMail, FiCalendar } from 'react-icons/fi';
 import Link from 'next/link';
 import { contentManager } from '@/lib/content-manager';
 
@@ -26,16 +26,20 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Load stats
-    const products = contentManager.getProducts();
-    const orders = contentManager.getOrders();
-    const revenue = orders.reduce((sum, order) => sum + order.total, 0);
+    const loadStats = async () => {
+      const products = await contentManager.getProducts();
+      const orders = await contentManager.getOrders();
+      const revenue = orders.reduce((sum, order) => sum + order.total, 0);
+      
+      setStats({
+        products: products.length,
+        orders: orders.length,
+        revenue,
+        customers: new Set(orders.map(o => o.customerEmail)).size
+      });
+    };
     
-    setStats({
-      products: products.length,
-      orders: orders.length,
-      revenue,
-      customers: new Set(orders.map(o => o.customerEmail)).size
-    });
+    loadStats();
   }, []);
 
   if (isLoading) {
@@ -52,8 +56,12 @@ export default function AdminDashboard() {
 
   const quickActions = [
     { icon: FiPackage, label: 'Manage Products', href: '/admin/products', color: 'bg-blue-500' },
+    { icon: FiClock, label: 'Manage Services', href: '/admin/services', color: 'bg-teal-500' },
+    { icon: FiCalendar, label: 'View Bookings', href: '/admin/bookings', color: 'bg-purple-500' },
+    { icon: FiCalendar, label: 'Schedule Settings', href: '/admin/schedule', color: 'bg-orange-500' },
     { icon: FiShoppingCart, label: 'View Orders', href: '/admin/orders', color: 'bg-green-500' },
-    { icon: FiEdit, label: 'Edit Content', href: '/admin/content', color: 'bg-purple-500' },
+    { icon: FiMail, label: 'Contact Submissions', href: '/admin/contact-submissions', color: 'bg-pink-500' },
+    { icon: FiEdit, label: 'Edit Content', href: '/admin/content', color: 'bg-cyan-500' },
     { icon: FiImage, label: 'Media Library', href: '/admin/media', color: 'bg-yellow-500' },
     { icon: FiFileText, label: 'Edit Pages', href: '/admin/pages', color: 'bg-indigo-500' },
     { icon: FiSettings, label: 'Settings', href: '/admin/settings', color: 'bg-gray-500' }

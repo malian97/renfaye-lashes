@@ -1,0 +1,90 @@
+[
+  {
+    "customerName": "Malian Bah",
+    "customerEmail": "malian@gmail.com",
+    "customerPhone": "7708377300",
+    "items": [
+      {
+        "productId": "1",
+        "productName": "Classic Volume Lashes",
+        "quantity": 1,
+        "price": 49.99
+      },
+      {
+        "productId": "2",
+        "productName": "Hybrid Volume Set",
+        "quantity": 1,
+        "price": 59.99
+      },
+      {
+        "productId": "3",
+        "productName": "Mega Volume Set",
+        "quantity": 1,
+        "price": 69.99
+      }
+    ],
+    "total": 179.97,
+    "status": "completed",
+    "shippingAddress": {
+      "address": "1069 parkmist",
+      "city": "Buford",
+      "state": "GA",
+      "zipCode": "30518"
+    },
+    "notes": "",
+    "id": "ORD-1764024493448-tq1cy3l8d",
+    "createdAt": "2025-11-24T22:48:13.448Z",
+    "updatedAt": "2025-11-24T22:49:47.770Z"
+  },
+  {
+    "customerName": "MQ MS",
+    "customerEmail": "Malian@GMAIL.COM",
+    "customerPhone": "4567",
+    "items": [
+      {
+        "productId": "2",
+        "productName": "Hybrid Volume Set",
+        "quantity": 1,
+        "price": 59.99
+      }
+    ],
+    "total": 59.99,
+    "status": "pending",
+    "shippingAddress": {
+      "address": "1069 BUFORD HWY",
+      "city": "LAWEN",
+      "state": "GA",
+      "zipCode": "30360"
+    },
+    "notes": "",
+    "id": "ORD-1764025214344-npi8g8c96",
+    "createdAt": "2025-11-24T23:00:14.344Z",
+    "updatedAt": "2025-11-24T23:00:14.344Z"
+  },
+  {
+    "customerName": "M b",
+    "customerEmail": "mb@mail.com",
+    "customerPhone": "7777777777",
+    "items": [
+      {
+        "productId": "3",
+        "productName": "Mega Volume Set",
+        "quantity": 1,
+        "price": 69.99
+      }
+    ],
+    "total": 69.99,
+    "shippingAddress": {
+      "address": "123 dfd",
+      "city": "sdsd",
+      "state": "ga",
+      "zipCode": "23456"
+    },
+    "notes": "",
+    "id": "ORD-1764025937821-zs1q4z1fy",
+    "status": "pending",
+    "paymentStatus": "pending",
+    "createdAt": "2025-11-24T23:12:17.821Z",
+    "updatedAt": "2025-11-24T23:12:17.821Z"
+  }
+]

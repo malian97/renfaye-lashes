@@ -3,10 +3,17 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 
 export default function CartSidebar() {
+  const router = useRouter();
   const { state, removeItem, updateQuantity, isOpen, toggleCart } = useCart();
+
+  const handleCheckout = () => {
+    toggleCart();
+    router.push('/checkout');
+  };
 
   return (
     <AnimatePresence>
@@ -111,8 +118,11 @@ export default function CartSidebar() {
                 </div>
                 
                 <div className="space-y-3">
-                  <button className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-full font-medium transition-colors">
-                    Checkout
+                  <button 
+                    onClick={handleCheckout}
+                    className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-full font-medium transition-colors"
+                  >
+                    Proceed to Checkout
                   </button>
                   <button
                     onClick={toggleCart}

@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { contentManager, Product } from '@/lib/content-manager';
-import { FiSave, FiArrowLeft } from 'react-icons/fi';
+import { FiSave, FiArrowLeft, FiPlus, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import ImageUpload from '@/components/admin/ImageUpload';
@@ -24,10 +24,18 @@ export default function EditProduct() {
     description: '',
     category: '',
     image: 'https://picsum.photos/600/800?random=new',
+    features: [],
+    specifications: {},
+    careInstructions: [],
     inStock: true,
     featured: false,
     bestSeller: false
   });
+
+  const [newFeature, setNewFeature] = useState('');
+  const [newSpecKey, setNewSpecKey] = useState('');
+  const [newSpecValue, setNewSpecValue] = useState('');
+  const [newCareInstruction, setNewCareInstruction] = useState('');
 
 
   useEffect(() => {
@@ -37,18 +45,22 @@ export default function EditProduct() {
   }, [isAdmin, isLoading, router]);
 
   useEffect(() => {
-    if (!isNew && productId) {
-      const existingProduct = contentManager.getProduct(productId);
-      if (existingProduct) {
-        setProduct(existingProduct);
-      } else {
-        toast.error('Product not found');
-        router.push('/admin/products');
+    const loadProduct = async () => {
+      if (!isNew && productId) {
+        const existingProduct = await contentManager.getProduct(productId);
+        if (existingProduct) {
+          setProduct(existingProduct);
+        } else {
+          toast.error('Product not found');
+          router.push('/admin/products');
+        }
       }
-    }
+    };
+    
+    loadProduct();
   }, [productId, isNew, router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!product.name || !product.price || !product.category) {
@@ -64,6 +76,9 @@ export default function EditProduct() {
       description: product.description || '',
       category: product.category,
       image: product.image || 'https://picsum.photos/600/800?random=new',
+      features: product.features || [],
+      specifications: product.specifications || {},
+      careInstructions: product.careInstructions || [],
       inStock: product.inStock ?? true,
       featured: product.featured ?? false,
       bestSeller: product.bestSeller ?? false,
@@ -71,9 +86,14 @@ export default function EditProduct() {
       updatedAt: new Date().toISOString()
     };
 
-    contentManager.saveProduct(productData);
-    toast.success(isNew ? 'Product created successfully' : 'Product updated successfully');
-    router.push('/admin/products');
+    try {
+      await contentManager.saveProduct(productData);
+      toast.success(isNew ? 'Product created successfully' : 'Product updated successfully');
+      router.push('/admin/products');
+    } catch (error) {
+      toast.error('Failed to save product');
+      console.error(error);
+    }
   };
 
 
@@ -195,6 +215,282 @@ export default function EditProduct() {
               }}
               label="Product Image"
             />
+          </div>
+
+          {/* Features Section */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-lg font-semibold mb-4">Key Features</h2>
+            
+            <div className="space-y-3">
+              {product.features && product.features.length > 0 ? (
+                product.features.map((feature, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={feature}
+                      onChange={(e) => {
+                        const newFeatures = [...(product.features || [])];
+                        newFeatures[index] = e.target.value;
+                        setProduct({ ...product, features: newFeatures });
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      placeholder="Enter feature"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newFeatures = product.features?.filter((_, i) => i !== index);
+                        setProduct({ ...product, features: newFeatures });
+                      }}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <FiX className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-sm">No features added yet</p>
+              )}
+              
+              <div className="flex items-center space-x-2 pt-2">
+                <input
+                  type="text"
+                  value={newFeature}
+                  onChange={(e) => setNewFeature(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (newFeature.trim()) {
+                        setProduct({ 
+                          ...product, 
+                          features: [...(product.features || []), newFeature.trim()] 
+                        });
+                        setNewFeature('');
+                      }
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  placeholder="Add a new feature"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newFeature.trim()) {
+                      setProduct({ 
+                        ...product, 
+                        features: [...(product.features || []), newFeature.trim()] 
+                      });
+                      setNewFeature('');
+                    }
+                  }}
+                  className="p-2 bg-pink-600 text-white hover:bg-pink-700 rounded-lg transition-colors"
+                >
+                  <FiPlus className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">Press Enter or click + to add a feature</p>
+            </div>
+          </div>
+
+          {/* Specifications Section */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-lg font-semibold mb-4">Specifications</h2>
+            
+            <div className="space-y-3">
+              {product.specifications && Object.keys(product.specifications).length > 0 ? (
+                Object.entries(product.specifications).map(([key, value]) => (
+                  <div key={key} className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={key}
+                      onChange={(e) => {
+                        const newSpecs = { ...product.specifications };
+                        const newKey = e.target.value;
+                        if (newKey !== key) {
+                          delete newSpecs[key];
+                          newSpecs[newKey] = value;
+                        }
+                        setProduct({ ...product, specifications: newSpecs });
+                      }}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      placeholder="Spec name"
+                    />
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => {
+                          const newSpecs = { ...product.specifications };
+                          newSpecs[key] = e.target.value;
+                          setProduct({ ...product, specifications: newSpecs });
+                        }}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                        placeholder="Spec value"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newSpecs = { ...product.specifications };
+                          delete newSpecs[key];
+                          setProduct({ ...product, specifications: newSpecs });
+                        }}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <FiX className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-sm">No specifications added yet</p>
+              )}
+              
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <input
+                  type="text"
+                  value={newSpecKey}
+                  onChange={(e) => setNewSpecKey(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (newSpecKey.trim() && newSpecValue.trim()) {
+                        setProduct({ 
+                          ...product, 
+                          specifications: { 
+                            ...(product.specifications || {}), 
+                            [newSpecKey.trim()]: newSpecValue.trim() 
+                          } 
+                        });
+                        setNewSpecKey('');
+                        setNewSpecValue('');
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  placeholder="Spec name (e.g., Material)"
+                />
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={newSpecValue}
+                    onChange={(e) => setNewSpecValue(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (newSpecKey.trim() && newSpecValue.trim()) {
+                          setProduct({ 
+                            ...product, 
+                            specifications: { 
+                              ...(product.specifications || {}), 
+                              [newSpecKey.trim()]: newSpecValue.trim() 
+                            } 
+                          });
+                          setNewSpecKey('');
+                          setNewSpecValue('');
+                        }
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                    placeholder="Spec value (e.g., Premium Silk)"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newSpecKey.trim() && newSpecValue.trim()) {
+                        setProduct({ 
+                          ...product, 
+                          specifications: { 
+                            ...(product.specifications || {}), 
+                            [newSpecKey.trim()]: newSpecValue.trim() 
+                          } 
+                        });
+                        setNewSpecKey('');
+                        setNewSpecValue('');
+                      }
+                    }}
+                    className="p-2 bg-pink-600 text-white hover:bg-pink-700 rounded-lg transition-colors"
+                  >
+                    <FiPlus className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">Press Enter or click + to add a specification</p>
+            </div>
+          </div>
+
+          {/* Care Instructions Section */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-lg font-semibold mb-4">Care Instructions</h2>
+            
+            <div className="space-y-3">
+              {product.careInstructions && product.careInstructions.length > 0 ? (
+                product.careInstructions.map((instruction, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={instruction}
+                      onChange={(e) => {
+                        const newInstructions = [...(product.careInstructions || [])];
+                        newInstructions[index] = e.target.value;
+                        setProduct({ ...product, careInstructions: newInstructions });
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      placeholder="Enter care instruction"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newInstructions = product.careInstructions?.filter((_, i) => i !== index);
+                        setProduct({ ...product, careInstructions: newInstructions });
+                      }}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <FiX className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-sm">No care instructions added yet</p>
+              )}
+              
+              <div className="flex items-center space-x-2 pt-2">
+                <input
+                  type="text"
+                  value={newCareInstruction}
+                  onChange={(e) => setNewCareInstruction(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (newCareInstruction.trim()) {
+                        setProduct({ 
+                          ...product, 
+                          careInstructions: [...(product.careInstructions || []), newCareInstruction.trim()] 
+                        });
+                        setNewCareInstruction('');
+                      }
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  placeholder="Add care instruction (e.g., Avoid oil-based products)"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newCareInstruction.trim()) {
+                      setProduct({ 
+                        ...product, 
+                        careInstructions: [...(product.careInstructions || []), newCareInstruction.trim()] 
+                      });
+                      setNewCareInstruction('');
+                    }
+                  }}
+                  className="p-2 bg-pink-600 text-white hover:bg-pink-700 rounded-lg transition-colors"
+                >
+                  <FiPlus className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">Press Enter or click + to add a care instruction</p>
+            </div>
           </div>
 
           {/* Status Section */}

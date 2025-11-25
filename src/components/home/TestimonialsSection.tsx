@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { FiStar, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { contentManager } from '@/lib/content-manager';
 
 interface Testimonial {
-  id: number;
+  id: string;
   name: string;
   location: string;
   rating: number;
@@ -14,47 +15,17 @@ interface Testimonial {
   service: string;
 }
 
-const testimonials: Testimonial[] = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    location: "New York, NY",
-    rating: 5,
-    text: "Absolutely amazing! The lashes look so natural and beautiful. I&apos;ve been getting compliments non-stop. The service was professional and the results exceeded my expectations.",
-    image: "https://picsum.photos/150/150?random=15",
-    service: "Classic Volume Lashes"
-  },
-  {
-    id: 2,
-    name: "Emily Chen",
-    location: "Los Angeles, CA",
-    rating: 5,
-    text: "Best lash experience I&apos;ve ever had! The attention to detail is incredible. My lashes have lasted for weeks and still look perfect. Highly recommend RENFAYE LASHES!",
-    image: "https://picsum.photos/150/150?random=16",
-    service: "Hybrid Volume Set"
-  },
-  {
-    id: 3,
-    name: "Maria Rodriguez",
-    location: "Miami, FL",
-    rating: 5,
-    text: "I&apos;m obsessed with my new lashes! They make me feel so confident and glamorous. The team is so skilled and made the whole process comfortable and relaxing.",
-    image: "https://picsum.photos/150/150?random=17",
-    service: "Mega Volume Set"
-  },
-  {
-    id: 4,
-    name: "Jessica Williams",
-    location: "Chicago, IL",
-    rating: 5,
-    text: "The quality is unmatched! I&apos;ve tried other places but nothing compares to RENFAYE LASHES. The lashes are lightweight, comfortable, and look absolutely stunning.",
-    image: "https://picsum.photos/150/150?random=18",
-    service: "Classic Volume Lashes"
-  }
-];
-
 export default function TestimonialsSection() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const loadContent = async () => {
+      const siteContent = await contentManager.getSiteContent();
+      setTestimonials(siteContent.testimonials || []);
+    };
+    loadContent();
+  }, []);
 
   const nextTestimonial = () => {
     setCurrentIndex((prev) => (prev + 1) % testimonials.length);
@@ -65,9 +36,10 @@ export default function TestimonialsSection() {
   };
 
   useEffect(() => {
+    if (testimonials.length === 0) return;
     const timer = setInterval(nextTestimonial, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [testimonials]);
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-pink-50 to-pink-100">
@@ -85,11 +57,11 @@ export default function TestimonialsSection() {
               className="flex transition-transform duration-500 ease-in-out"
               style={{ transform: `translateX(-${currentIndex * 100}%)` }}
             >
-              {testimonials.map((testimonial) => (
+              {testimonials.map((testimonial: Testimonial) => (
                 <div key={testimonial.id} className="w-full flex-shrink-0 px-2 sm:px-4">
                   <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg text-center">
                     <div className="flex justify-center mb-4 sm:mb-6">
-                      {[...Array(testimonial.rating)].map((_, i) => (
+                      {[...Array(testimonial.rating)].map((_: any, i: number) => (
                         <FiStar key={i} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
                       ))}
                     </div>
@@ -136,7 +108,7 @@ export default function TestimonialsSection() {
 
           {/* Dots Indicator */}
           <div className="flex justify-center space-x-2 mt-6 sm:mt-8">
-            {testimonials.map((_, index) => (
+            {testimonials.map((_: any, index: number) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}

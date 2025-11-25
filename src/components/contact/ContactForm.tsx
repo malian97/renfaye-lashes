@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiPhone, FiMail, FiMapPin, FiClock, FiCheck, FiSend } from 'react-icons/fi';
+import { contentManager } from '@/lib/content-manager';
+import { useUser } from '@/contexts/UserContext';
 
 interface FormData {
   name: string;
@@ -11,8 +13,19 @@ interface FormData {
   message: string;
 }
 
+interface ContactInfo {
+  phone: string;
+  email: string;
+  address: string;
+  hours: string;
+}
 
-export default function ContactForm() {
+interface ContactFormProps {
+  contactInfo?: ContactInfo;
+}
+
+export default function ContactForm({ contactInfo }: ContactFormProps = {}) {
+  const { user, isAuthenticated } = useUser();
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -24,6 +37,18 @@ export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // Auto-populate form with user data
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setFormData(prev => ({
+        ...prev,
+        name: `${user.firstName} ${user.lastName}` || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+      }));
+    }
+  }, [isAuthenticated, user]);
+
   const services = [
     'Classic Lashes',
     'Volume Lashes',
@@ -33,6 +58,14 @@ export default function ContactForm() {
     'Touch-Up/Fill',
     'Consultation'
   ];
+
+  // Use provided contactInfo or fallback to defaults
+  const info = contactInfo || {
+    phone: '(555) 123-4567',
+    email: 'hello@renfayelashes.com',
+    address: '123 Beauty Lane\nNew York, NY 10001',
+    hours: 'Mon-Fri: 9AM-7PM\nSat: 9AM-5PM\nSun: Closed'
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -72,11 +105,26 @@ export default function ContactForm() {
 
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitted(true);
-    setIsSubmitting(false);
+    try {
+      // Save the contact submission to the database
+      await contentManager.saveContactSubmission({
+        id: Date.now().toString(),
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        service: formData.service,
+        message: formData.message,
+        status: 'new',
+        createdAt: new Date().toISOString()
+      });
+      
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('There was an error sending your message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -113,16 +161,9 @@ export default function ContactForm() {
   }
 
   return (
-    <div className="py-20 bg-white">
+    <div className="bg-white">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-serif font-bold mb-4">Get in Touch</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Ready to enhance your natural beauty? Contact us to book your appointment or ask any questions about our services.
-            </p>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Contact Information */}
             <div className="space-y-8">
@@ -135,7 +176,9 @@ export default function ContactForm() {
                     </div>
                     <div>
                       <p className="font-medium">Phone</p>
-                      <p className="text-gray-600">(555) 123-4567</p>
+                      <a href={`tel:${info.phone.replace(/\D/g, '')}`} className="text-gray-600 hover:text-pink-600">
+                        {info.phone}
+                      </a>
                     </div>
                   </div>
                   
@@ -145,7 +188,9 @@ export default function ContactForm() {
                     </div>
                     <div>
                       <p className="font-medium">Email</p>
-                      <p className="text-gray-600">hello@renfayelashes.com</p>
+                      <a href={`mailto:${info.email}`} className="text-gray-600 hover:text-pink-600 break-all">
+                        {info.email}
+                      </a>
                     </div>
                   </div>
                   
@@ -155,7 +200,7 @@ export default function ContactForm() {
                     </div>
                     <div>
                       <p className="font-medium">Address</p>
-                      <p className="text-gray-600">123 Beauty Lane<br />New York, NY 10001</p>
+                      <p className="text-gray-600 whitespace-pre-line">{info.address}</p>
                     </div>
                   </div>
                   
@@ -165,10 +210,8 @@ export default function ContactForm() {
                     </div>
                     <div>
                       <p className="font-medium">Hours</p>
-                      <p className="text-gray-600">
-                        Mon-Fri: 9AM-7PM<br />
-                        Sat: 9AM-5PM<br />
-                        Sun: Closed
+                      <p className="text-gray-600 whitespace-pre-line">
+                        {info.hours}
                       </p>
                     </div>
                   </div>
