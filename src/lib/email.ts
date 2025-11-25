@@ -1,7 +1,14 @@
 import { Resend } from 'resend';
 import { Order, Appointment } from './content-manager';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialize Resend only when needed
+let resend: Resend | null = null;
+function getResendClient() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 // Email configuration
 const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
@@ -15,12 +22,14 @@ interface EmailOptions {
 
 async function sendEmail({ to, subject, html }: EmailOptions) {
   try {
-    if (!process.env.RESEND_API_KEY) {
+    const client = getResendClient();
+    
+    if (!client) {
       console.warn('RESEND_API_KEY not configured. Email not sent.');
       return { success: false, error: 'Email service not configured' };
     }
 
-    const data = await resend.emails.send({
+    const data = await client.emails.send({
       from: FROM_EMAIL,
       to: [to],
       subject,
