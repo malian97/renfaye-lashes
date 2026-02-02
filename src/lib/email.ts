@@ -135,7 +135,7 @@ export function generateOrderConfirmationEmail(order: Order): string {
 
             <!-- Footer -->
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 14px;">
-              <p>Questions about your order? Contact us at info@renfayelashes.com</p>
+              <p>Questions about your order? Contact us at renfayelashessupplies@gmail.com</p>
               <p style="margin-top: 16px;">Thank you for shopping with ${STORE_NAME}!</p>
             </div>
           </div>
@@ -201,12 +201,12 @@ export function generateAppointmentConfirmationEmail(appointment: Appointment): 
 
             <!-- Action Button -->
             <div style="text-align: center; margin: 32px 0;">
-              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://renfayelashes.com'}/contact" style="display: inline-block; background-color: #ec4899; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">Contact Us</a>
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://renfaye.com'}/contact" style="display: inline-block; background-color: #ec4899; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">Contact Us</a>
             </div>
 
             <!-- Footer -->
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 14px;">
-              <p>Need to make changes? Contact us at info@renfayelashes.com or call (555) 123-4567</p>
+              <p>Need to make changes? Contact us at renfayelashessupplies@gmail.com or call +1 (912) 259-4886</p>
               <p style="margin-top: 16px;">We look forward to seeing you at ${STORE_NAME}!</p>
             </div>
           </div>
@@ -293,7 +293,7 @@ export function generatePasswordResetEmail(email: string, resetToken: string): s
 
             <!-- Footer -->
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 14px;">
-              <p>Need help? Contact us at info@renfayelashes.com</p>
+              <p>Need help? Contact us at renfayelashessupplies@gmail.com or call +1 (912) 259-4886</p>
               <p style="margin-top: 16px;">This is an automated message from ${STORE_NAME}</p>
             </div>
           </div>

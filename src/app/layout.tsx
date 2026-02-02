@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://renfayelashes.com',
+    url: 'https://renfaye.com',
     title: 'RENFAYE LASHES | Premium Eyelash Extensions',
     description: 'Discover luxury eyelash extensions that enhance your natural beauty.',
     siteName: 'RENFAYE LASHES',
