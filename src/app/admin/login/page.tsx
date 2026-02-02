@@ -112,14 +112,6 @@ export default function AdminLogin() {
           >
             {isLoading ? 'Signing in...' : 'Sign in'}
           </button>
-
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600 text-center">
-              <strong>Demo Credentials:</strong><br />
-              Email: admin@renfayelashes.com<br />
-              Password: admin123
-            </p>
-          </div>
         </form>
       </div>
     </div>
