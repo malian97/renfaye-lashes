@@ -10,7 +10,6 @@ function MembershipSuccessContent() {
   const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [membershipName, setMembershipName] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
@@ -34,18 +33,9 @@ function MembershipSuccessContent() {
           setMembershipName(data.tierName || 'Membership');
           setStatus('success');
         } else {
-          try {
-            const data = await response.json();
-            // Show full error info including debug data
-            const debugInfo = data.debug ? ` | Debug: ${JSON.stringify(data.debug)}` : '';
-            setErrorMessage((data.details || data.error || 'Failed to verify membership') + debugInfo);
-          } catch {
-            setErrorMessage('Failed to verify membership');
-          }
           setStatus('error');
         }
       } catch {
-        setErrorMessage('Failed to verify membership');
         setStatus('error');
       }
     };
@@ -75,11 +65,6 @@ function MembershipSuccessContent() {
           <p className="text-gray-600 mb-8">
             We couldn&apos;t verify your membership. Please contact support if you were charged.
           </p>
-          {errorMessage ? (
-            <p className="text-sm text-gray-500 mb-8 break-words">
-              {errorMessage}
-            </p>
-          ) : null}
           <Link
             href="/contact"
             className="inline-block bg-pink-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-pink-600 transition-colors"
