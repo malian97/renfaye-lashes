@@ -102,6 +102,8 @@ export interface Appointment {
   pointsDiscount?: number;
   pointsToEarn?: number;
   userId?: string;
+  technicianId?: string;
+  technicianName?: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'refunded';
   paymentIntentId?: string;
@@ -177,6 +179,7 @@ export interface SiteContent {
       image: string;
       bio: string;
       certifications: string[];
+      isTechnician?: boolean;
     }>;
     cta: {
       title: string;

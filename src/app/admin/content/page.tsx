@@ -491,6 +491,21 @@ export default function AdminContent() {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                           />
                         </div>
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={member.isTechnician || false}
+                            onChange={(e) => {
+                              const newTeam = [...content.about.team];
+                              newTeam[index].isTechnician = e.target.checked;
+                              updateContent('about', { ...content.about, team: newTeam });
+                            }}
+                            className="w-4 h-4 text-pink-600 rounded focus:ring-pink-500 mr-2"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            This team member is a technician (available for booking)
+                          </span>
+                        </label>
                         <button
                           onClick={() => {
                             const newTeam = content.about.team.filter((_, i) => i !== index);

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Service, contentManager } from '@/lib/content-manager';
+import { Service, contentManager, SiteContent } from '@/lib/content-manager';
 import { useUser } from '@/contexts/UserContext';
-import { FiX, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiDollarSign, FiStar, FiGift } from 'react-icons/fi';
+import { FiX, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiDollarSign, FiStar, FiGift, FiUsers } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { 
   POINTS_CONFIG, 
@@ -42,6 +42,8 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
   const [loading, setLoading] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [membershipTiers, setMembershipTiers] = useState<MembershipTier[]>([]);
+  const [technicians, setTechnicians] = useState<SiteContent['about']['team']>([]);
+  const [selectedTechnician, setSelectedTechnician] = useState('');
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [usePoints, setUsePoints] = useState(false);
   
@@ -64,13 +66,16 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
   const finalPrice = Math.max(0, service.price - pointsDiscount);
   const pointsToEarn = pointsRate > 0 ? calculatePointsEarned(finalPrice, pointsRate) : 0;
 
-  // Fetch membership tiers
+  // Fetch membership tiers and technicians
   useEffect(() => {
-    const fetchTiers = async () => {
+    const fetchData = async () => {
       const siteContent = await contentManager.getSiteContent();
       setMembershipTiers(siteContent.membership?.tiers || []);
+      // Filter team members who are technicians
+      const techs = (siteContent.about?.team || []).filter(member => member.isTechnician);
+      setTechnicians(techs);
     };
-    fetchTiers();
+    fetchData();
   }, []);
 
   // Auto-populate form with user data
@@ -135,7 +140,8 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
 
     setLoading(true);
     try {
-      // Create appointment with points data
+      // Create appointment with points data and technician
+      const selectedTech = technicians.find(t => t.id === selectedTechnician);
       const appointment = await contentManager.createAppointment({
         serviceId: service.id,
         serviceName: service.name,
@@ -150,6 +156,8 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
         pointsDiscount: pointsDiscount,
         pointsToEarn: pointsToEarn,
         userId: user?.id,
+        technicianId: selectedTechnician || undefined,
+        technicianName: selectedTech?.name || undefined,
         status: 'pending',
         paymentStatus: 'pending',
         notes: formData.notes
@@ -346,6 +354,31 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
                   placeholder="(555) 123-4567"
                 />
               </div>
+
+              {/* Technician Selection */}
+              {technicians.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FiUsers className="inline mr-2" />
+                    Preferred Technician (Optional)
+                  </label>
+                  <select
+                    value={selectedTechnician}
+                    onChange={(e) => setSelectedTechnician(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  >
+                    <option value="">No preference</option>
+                    {technicians.map((tech) => (
+                      <option key={tech.id} value={tech.id}>
+                        {tech.name} - {tech.role}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select your preferred technician or leave as &quot;No preference&quot;
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
