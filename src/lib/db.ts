@@ -30,11 +30,42 @@ export interface User {
   suspended?: boolean;
   suspendedAt?: string;
   suspendedReason?: string;
+  membership?: {
+    tierId: string;
+    tierName: string;
+    status: 'active' | 'cancelled' | 'past_due';
+    stripeSubscriptionId?: string;
+    stripeCustomerId?: string;
+    currentPeriodEnd?: string;
+    cancelAtPeriodEnd?: boolean;
+    usage?: {
+      currentPeriodStart: string;
+      refillsUsed: number;
+      fullSetsUsed: number;
+    };
+  };
+  points?: {
+    balance: number;
+    lifetimeEarned: number;
+    history: Array<{
+      id: string;
+      date: string;
+      type: 'earned' | 'redeemed';
+      amount: number;
+      description: string;
+      orderId?: string;
+    }>;
+  };
   createdAt: string;
   updatedAt: string;
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+const DEFAULT_DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_DIR = (() => {
+  const envDir = process.env.DATA_DIR;
+  if (!envDir) return DEFAULT_DATA_DIR;
+  return path.isAbsolute(envDir) ? envDir : path.join(process.cwd(), envDir);
+})();
 
 // Ensure data directory exists
 async function ensureDataDir() {
@@ -625,6 +656,130 @@ function getDefaultSiteContent() {
         primaryButtonLink: '/book',
         secondaryButtonText: 'Contact Us',
         secondaryButtonLink: '/contact'
+      }
+    },
+    membership: {
+      title: 'RENFAYE Memberships',
+      subtitle: 'Join our exclusive membership program and enjoy premium lash services, special discounts, and rewards that keep you looking fabulous all year round.',
+      benefits: [
+        {
+          id: '1',
+          title: '10% Off Retail',
+          description: 'Enjoy exclusive discounts on all retail products'
+        },
+        {
+          id: '2',
+          title: 'Free Full Set',
+          description: 'Earn a complimentary full set after 20 bookings'
+        },
+        {
+          id: '3',
+          title: 'Points Program',
+          description: '5% point accumulation on every visit'
+        },
+        {
+          id: '4',
+          title: 'Priority Booking',
+          description: 'Get priority access to appointments'
+        }
+      ],
+      tiers: [
+        {
+          id: 'natural',
+          name: 'Renfaye Natural',
+          price: 100,
+          popular: false,
+          features: [
+            'Classic wet set',
+            'YY lashes',
+            '2 refills per month or 1 full-set',
+            '10% off all retail products',
+            '5% point accumulation program',
+            'Full set after 20 bookings'
+          ],
+          benefits: {
+            productDiscount: 10,
+            serviceDiscount: 0,
+            pointsRate: 5,
+            freeRefillsPerMonth: 2,
+            freeFullSetsPerMonth: 0,
+            includedServiceIds: []
+          }
+        },
+        {
+          id: 'hybrid',
+          name: 'Renfaye Hybrid',
+          price: 120,
+          popular: false,
+          features: [
+            'Classic wet set',
+            'YY lashes mixed with 10D volume',
+            '2 refills per month or 1 full-set',
+            '10% off all retail products',
+            '5% point accumulation program',
+            'Full set after 20 bookings'
+          ],
+          benefits: {
+            productDiscount: 10,
+            serviceDiscount: 0,
+            pointsRate: 5,
+            freeRefillsPerMonth: 2,
+            freeFullSetsPerMonth: 0,
+            includedServiceIds: []
+          }
+        },
+        {
+          id: 'volume',
+          name: 'Renfaye Volume',
+          price: 140,
+          popular: true,
+          features: [
+            '10D handmade fans',
+            '10D pre-made fans',
+            '2 refills per month or 1 full-set',
+            '10% off all retail products',
+            '5% point accumulation program',
+            'Full set after 20 bookings'
+          ],
+          benefits: {
+            productDiscount: 10,
+            serviceDiscount: 0,
+            pointsRate: 5,
+            freeRefillsPerMonth: 2,
+            freeFullSetsPerMonth: 0,
+            includedServiceIds: []
+          }
+        },
+        {
+          id: 'mega',
+          name: 'Renfaye Mega',
+          price: 165,
+          popular: false,
+          features: [
+            '20D handmade fans',
+            '20D pre-made fans',
+            '2 refills per month or 1 full-set',
+            '10% off all retail products',
+            '5% point accumulation program',
+            'Full set after 20 bookings'
+          ],
+          benefits: {
+            productDiscount: 10,
+            serviceDiscount: 0,
+            pointsRate: 5,
+            freeRefillsPerMonth: 2,
+            freeFullSetsPerMonth: 0,
+            includedServiceIds: []
+          }
+        }
+      ],
+      cta: {
+        title: 'Ready to Join the RENFAYE Family?',
+        description: 'Contact us today to learn more about our membership options and start your journey to beautiful lashes.',
+        primaryButtonText: 'Contact Us',
+        primaryButtonLink: '/contact',
+        secondaryButtonText: 'View Services',
+        secondaryButtonLink: '/services'
       }
     }
   };

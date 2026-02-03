@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiLogOut, FiSave, FiEye, FiEyeOff, FiPackage, FiCalendar, FiDollarSign } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiLogOut, FiSave, FiEye, FiEyeOff, FiPackage, FiCalendar, FiDollarSign, FiStar, FiXCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import OrderHistory from '@/components/account/OrderHistory';
 import Appointments from '@/components/account/Appointments';
@@ -13,7 +13,7 @@ export default function AccountPage() {
   const { user, isLoading: userLoading, isAuthenticated, logout, updateProfile } = useUser();
   const router = useRouter();
   
-  const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'appointments' | 'transactions' | 'password'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'membership' | 'orders' | 'appointments' | 'transactions' | 'password'>('profile');
   
   // Profile form state
   const [profileData, setProfileData] = useState({
@@ -44,6 +44,8 @@ export default function AccountPage() {
   });
   
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     if (!userLoading && !isAuthenticated) {
@@ -140,6 +142,36 @@ export default function AccountPage() {
     setIsUpdating(false);
   };
 
+  const handleCancelMembership = async () => {
+    setIsCancelling(true);
+    try {
+      const Cookies = (await import('js-cookie')).default;
+      const token = Cookies.get('user_token');
+      const response = await fetch('/api/cancel-membership', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Your membership will be cancelled at the end of your billing period');
+        setShowCancelModal(false);
+        // Refresh user data
+        window.location.reload();
+      } else {
+        toast.error(data.error || 'Failed to cancel membership');
+      }
+    } catch (error) {
+      toast.error('An error occurred');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   if (userLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -188,6 +220,17 @@ export default function AccountPage() {
               >
                 <FiUser className="inline mr-2" />
                 Profile
+              </button>
+              <button
+                onClick={() => setActiveTab('membership')}
+                className={`flex-1 py-4 px-4 text-center font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === 'membership'
+                    ? 'border-pink-500 text-pink-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FiStar className="inline mr-2" />
+                Membership
               </button>
               <button
                 onClick={() => setActiveTab('orders')}
@@ -243,6 +286,108 @@ export default function AccountPage() {
               <Appointments />
             ) : activeTab === 'transactions' ? (
               <TransactionHistory />
+            ) : activeTab === 'membership' ? (
+              <div className="space-y-6">
+                {user?.membership?.status === 'active' ? (
+                  <>
+                    {/* Current Plan Card */}
+                    <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl p-6 text-white">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-pink-100 text-sm mb-1">Current Plan</p>
+                          <h3 className="text-2xl font-bold">{user.membership.tierName}</h3>
+                          <p className="text-pink-100 mt-2">
+                            {user.membership.cancelAtPeriodEnd 
+                              ? `Cancels on ${new Date(user.membership.currentPeriodEnd || '').toLocaleDateString()}`
+                              : `Renews on ${new Date(user.membership.currentPeriodEnd || '').toLocaleDateString()}`
+                            }
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <FiStar className="w-12 h-12 text-white/50" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Points & Usage Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+                        <p className="text-gray-500 text-sm">Points Balance</p>
+                        <p className="text-3xl font-bold text-pink-600">{user.points?.balance || 0}</p>
+                        <p className="text-xs text-gray-400">Lifetime: {user.points?.lifetimeEarned || 0} pts</p>
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+                        <p className="text-gray-500 text-sm">Refills Used</p>
+                        <p className="text-3xl font-bold text-pink-600">
+                          {user.membership.usage?.refillsUsed || 0}
+                        </p>
+                        <p className="text-xs text-gray-400">This billing period</p>
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+                        <p className="text-gray-500 text-sm">Full Sets Used</p>
+                        <p className="text-3xl font-bold text-pink-600">
+                          {user.membership.usage?.fullSetsUsed || 0}
+                        </p>
+                        <p className="text-xs text-gray-400">This billing period</p>
+                      </div>
+                    </div>
+
+                    {/* Benefits Summary */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-6">
+                      <h4 className="font-semibold text-gray-900 mb-4">Your Benefits</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center p-3 bg-pink-50 rounded-lg">
+                          <p className="text-2xl font-bold text-pink-600">10%</p>
+                          <p className="text-xs text-gray-600">Product Discount</p>
+                        </div>
+                        <div className="text-center p-3 bg-pink-50 rounded-lg">
+                          <p className="text-2xl font-bold text-pink-600">5%</p>
+                          <p className="text-xs text-gray-600">Points Rate</p>
+                        </div>
+                        <div className="text-center p-3 bg-pink-50 rounded-lg">
+                          <p className="text-2xl font-bold text-pink-600">2</p>
+                          <p className="text-xs text-gray-600">Free Refills/Mo</p>
+                        </div>
+                        <div className="text-center p-3 bg-pink-50 rounded-lg">
+                          <p className="text-2xl font-bold text-pink-600">∞</p>
+                          <p className="text-xs text-gray-600">Priority Booking</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cancel Membership */}
+                    {!user.membership.cancelAtPeriodEnd && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-6">
+                        <h4 className="font-semibold text-gray-900 mb-2">Manage Subscription</h4>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Your membership renews automatically each month. You can cancel anytime.
+                        </p>
+                        <button
+                          onClick={() => setShowCancelModal(true)}
+                          className="text-red-600 hover:text-red-700 text-sm font-medium flex items-center"
+                        >
+                          <FiXCircle className="mr-2" />
+                          Cancel Membership
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="bg-gray-50 rounded-xl p-6 text-center">
+                    <FiStar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No Active Membership</h3>
+                    <p className="text-gray-600 mb-4">
+                      Join our membership program to enjoy exclusive benefits and discounts.
+                    </p>
+                    <a
+                      href="/membership"
+                      className="inline-block bg-pink-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-pink-600 transition-colors"
+                    >
+                      View Memberships
+                    </a>
+                  </div>
+                )}
+              </div>
             ) : activeTab === 'profile' ? (
               <form onSubmit={handleProfileSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -518,6 +663,39 @@ export default function AccountPage() {
           </div>
         </div>
       </div>
+
+      {/* Cancel Membership Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Cancel Membership?</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to cancel your <strong>{user?.membership?.tierName}</strong> membership?
+            </p>
+            <ul className="text-sm text-gray-600 mb-6 space-y-2">
+              <li>• You&apos;ll keep your benefits until {user?.membership?.currentPeriodEnd ? new Date(user.membership.currentPeriodEnd).toLocaleDateString() : 'the end of your billing period'}</li>
+              <li>• You won&apos;t be charged again after cancellation</li>
+              <li>• You can resubscribe anytime</li>
+            </ul>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                disabled={isCancelling}
+              >
+                Keep Membership
+              </button>
+              <button
+                onClick={handleCancelMembership}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium disabled:opacity-50"
+                disabled={isCancelling}
+              >
+                {isCancelling ? 'Cancelling...' : 'Yes, Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

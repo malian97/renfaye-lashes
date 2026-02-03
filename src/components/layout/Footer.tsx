@@ -110,14 +110,8 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} RENFAYE LASHES. All rights reserved.
           </p>
           <div className="flex space-x-6">
-            <Link href="/privacy-policy" className="text-gray-500 hover:text-white text-sm transition-colors">
+            <Link href="/policy" className="text-gray-500 hover:text-white text-sm transition-colors">
               Privacy Policy
-            </Link>
-            <Link href="/terms-of-service" className="text-gray-500 hover:text-white text-sm transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/shipping-policy" className="text-gray-500 hover:text-white text-sm transition-colors">
-              Shipping Policy
             </Link>
           </div>
         </div>

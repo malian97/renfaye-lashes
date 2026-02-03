@@ -105,10 +105,10 @@ export default function HeroSection() {
               {content.hero.ctaText}
             </Link>
             <Link
-              href="/gallery"
+              href="/membership"
               className="border-2 border-white text-white hover:bg-white hover:text-pink-600 px-10 py-5 rounded-full font-semibold transition-all duration-300 text-center text-lg hover:shadow-xl transform hover:scale-105"
             >
-              View Gallery
+              View Memberships
             </Link>
           </div>
         </motion.div>

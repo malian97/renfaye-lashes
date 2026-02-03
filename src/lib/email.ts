@@ -313,3 +313,389 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
     html,
   });
 }
+
+// Membership activation email template (to customer)
+export function generateMembershipActivatedEmail(
+  customerName: string,
+  tierName: string,
+  price: number
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome to ${STORE_NAME} Membership!</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); padding: 40px 20px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">${STORE_NAME}</h1>
+          </div>
+
+          <!-- Content -->
+          <div style="padding: 40px 20px;">
+            <h2 style="color: #1f2937; margin-top: 0;">🎉 Welcome to ${tierName}!</h2>
+            <p style="color: #4b5563; font-size: 16px;">
+              Hi ${customerName},
+            </p>
+            <p style="color: #4b5563; font-size: 16px;">
+              Thank you for becoming a member! Your <strong>${tierName}</strong> membership is now active.
+            </p>
+
+            <!-- Membership Details -->
+            <div style="background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); border-radius: 12px; padding: 24px; margin: 24px 0; border-left: 4px solid #ec4899;">
+              <h3 style="margin-top: 0; color: #1f2937; font-size: 20px;">Membership Details</h3>
+              <p style="margin: 8px 0;"><strong>Plan:</strong> ${tierName}</p>
+              <p style="margin: 8px 0;"><strong>Monthly Price:</strong> $${price.toFixed(2)}/month</p>
+              <p style="margin: 8px 0;"><strong>Status:</strong> <span style="color: #10b981; font-weight: bold;">Active</span></p>
+            </div>
+
+            <!-- Benefits -->
+            <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; border-radius: 8px; padding: 16px; margin: 24px 0;">
+              <h4 style="margin-top: 0; color: #166534; font-size: 16px;">✨ Your Member Benefits</h4>
+              <ul style="margin: 8px 0; padding-left: 20px; color: #166534;">
+                <li>Exclusive member discounts on products</li>
+                <li>Priority booking for services</li>
+                <li>Earn points on every service booking</li>
+                <li>Special member-only promotions</li>
+              </ul>
+            </div>
+
+            <!-- Action Button -->
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://renfaye.com'}/account" style="display: inline-block; background-color: #ec4899; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">View My Account</a>
+            </div>
+
+            <!-- Footer -->
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 14px;">
+              <p>Questions? Contact us at renfayelashessupplies@gmail.com</p>
+              <p style="margin-top: 16px;">Thank you for being a valued member of ${STORE_NAME}!</p>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+// Membership cancellation email template (to customer)
+export function generateMembershipCancelledEmail(
+  customerName: string,
+  tierName: string,
+  cancelDate: string
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Membership Cancellation Scheduled</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); padding: 40px 20px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">${STORE_NAME}</h1>
+          </div>
+
+          <!-- Content -->
+          <div style="padding: 40px 20px;">
+            <h2 style="color: #1f2937; margin-top: 0;">Membership Cancellation Scheduled</h2>
+            <p style="color: #4b5563; font-size: 16px;">
+              Hi ${customerName},
+            </p>
+            <p style="color: #4b5563; font-size: 16px;">
+              We're sorry to see you go. Your <strong>${tierName}</strong> membership has been scheduled for cancellation.
+            </p>
+
+            <!-- Cancellation Details -->
+            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 20px; margin: 24px 0;">
+              <h3 style="margin-top: 0; color: #92400e; font-size: 18px;">📅 Important Information</h3>
+              <p style="margin: 8px 0; color: #78350f;">
+                <strong>Your membership will remain active until:</strong><br>
+                <span style="font-size: 18px; font-weight: bold;">${new Date(cancelDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </p>
+              <p style="margin: 8px 0; color: #78350f; font-size: 14px;">
+                You can continue to enjoy all member benefits until this date.
+              </p>
+            </div>
+
+            <!-- Re-subscribe CTA -->
+            <div style="background-color: #f0fdf4; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
+              <p style="color: #166534; margin: 0 0 16px 0;">Changed your mind? You can re-subscribe anytime!</p>
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://renfaye.com'}/membership" style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">View Membership Plans</a>
+            </div>
+
+            <!-- Footer -->
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 14px;">
+              <p>Questions? Contact us at renfayelashessupplies@gmail.com</p>
+              <p style="margin-top: 16px;">We hope to see you again at ${STORE_NAME}!</p>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+// Admin notification email for new membership
+export function generateAdminMembershipNotificationEmail(
+  customerName: string,
+  customerEmail: string,
+  tierName: string,
+  price: number,
+  action: 'subscribed' | 'cancelled'
+): string {
+  const actionText = action === 'subscribed' ? 'New Membership Subscription' : 'Membership Cancellation';
+  const actionColor = action === 'subscribed' ? '#10b981' : '#ef4444';
+  const actionEmoji = action === 'subscribed' ? '🎉' : '📤';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${actionText}</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); padding: 30px 20px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">${STORE_NAME} Admin</h1>
+          </div>
+
+          <!-- Content -->
+          <div style="padding: 30px 20px;">
+            <div style="background-color: ${action === 'subscribed' ? '#f0fdf4' : '#fef2f2'}; border-left: 4px solid ${actionColor}; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+              <h2 style="color: ${actionColor}; margin: 0; font-size: 18px;">${actionEmoji} ${actionText}</h2>
+            </div>
+
+            <!-- Customer Details -->
+            <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin: 16px 0;">
+              <h3 style="margin-top: 0; color: #1f2937; font-size: 16px;">Customer Details</h3>
+              <p style="margin: 8px 0;"><strong>Name:</strong> ${customerName}</p>
+              <p style="margin: 8px 0;"><strong>Email:</strong> ${customerEmail}</p>
+              <p style="margin: 8px 0;"><strong>Membership:</strong> ${tierName}</p>
+              <p style="margin: 8px 0;"><strong>Monthly Price:</strong> $${price.toFixed(2)}</p>
+              <p style="margin: 8px 0;"><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+
+            <!-- Action Button -->
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://renfaye.com'}/admin/users" style="display: inline-block; background-color: #1f2937; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">View Users in Admin</a>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+// Send membership activated email
+export async function sendMembershipActivatedEmail(
+  customerEmail: string,
+  customerName: string,
+  tierName: string,
+  price: number,
+  adminEmail?: string
+) {
+  const customerHtml = generateMembershipActivatedEmail(customerName, tierName, price);
+  
+  // Send to customer
+  const customerResult = await sendEmail({
+    to: customerEmail,
+    subject: `Welcome to ${tierName} - Your Membership is Active!`,
+    html: customerHtml,
+  });
+
+  // Send notification to admin if email provided
+  if (adminEmail) {
+    const adminHtml = generateAdminMembershipNotificationEmail(customerName, customerEmail, tierName, price, 'subscribed');
+    await sendEmail({
+      to: adminEmail,
+      subject: `New Membership: ${customerName} subscribed to ${tierName}`,
+      html: adminHtml,
+    });
+  }
+
+  return customerResult;
+}
+
+// Send membership cancelled email
+export async function sendMembershipCancelledEmail(
+  customerEmail: string,
+  customerName: string,
+  tierName: string,
+  price: number,
+  cancelDate: string,
+  adminEmail?: string
+) {
+  const customerHtml = generateMembershipCancelledEmail(customerName, tierName, cancelDate);
+  
+  // Send to customer
+  const customerResult = await sendEmail({
+    to: customerEmail,
+    subject: `Membership Cancellation Scheduled - ${STORE_NAME}`,
+    html: customerHtml,
+  });
+
+  // Send notification to admin if email provided
+  if (adminEmail) {
+    const adminHtml = generateAdminMembershipNotificationEmail(customerName, customerEmail, tierName, price, 'cancelled');
+    await sendEmail({
+      to: adminEmail,
+      subject: `Membership Cancelled: ${customerName} cancelled ${tierName}`,
+      html: adminHtml,
+    });
+  }
+
+  return customerResult;
+}
+
+// Refund email template
+export function generateRefundEmail(
+  customerName: string,
+  itemDescription: string,
+  amount: number,
+  reason: string
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Refund Confirmation</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 20px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">${STORE_NAME}</h1>
+          </div>
+
+          <!-- Content -->
+          <div style="padding: 40px 20px;">
+            <h2 style="color: #1f2937; margin-top: 0;">💰 Refund Processed</h2>
+            <p style="color: #4b5563; font-size: 16px;">
+              Hi ${customerName},
+            </p>
+            <p style="color: #4b5563; font-size: 16px;">
+              We have processed a refund for your recent purchase. The details are below:
+            </p>
+
+            <!-- Refund Details -->
+            <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; border-radius: 8px; padding: 24px; margin: 24px 0;">
+              <h3 style="margin-top: 0; color: #166534; font-size: 18px;">Refund Details</h3>
+              <p style="margin: 8px 0;"><strong>Item:</strong> ${itemDescription}</p>
+              <p style="margin: 8px 0;"><strong>Refund Amount:</strong> <span style="color: #10b981; font-size: 20px; font-weight: bold;">$${amount.toFixed(2)}</span></p>
+              <p style="margin: 8px 0;"><strong>Reason:</strong> ${reason}</p>
+              <p style="margin: 8px 0;"><strong>Date:</strong> ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            </div>
+
+            <!-- Processing Time -->
+            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 24px 0;">
+              <p style="margin: 0; color: #92400e; font-size: 14px;">
+                <strong>📅 Processing Time:</strong> Please allow 5-10 business days for the refund to appear in your account, depending on your bank or payment provider.
+              </p>
+            </div>
+
+            <!-- Footer -->
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 14px;">
+              <p>Questions about your refund? Contact us at renfayelashessupplies@gmail.com</p>
+              <p style="margin-top: 16px;">Thank you for your understanding.</p>
+              <p style="margin-top: 8px;">${STORE_NAME}</p>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+// Admin notification for refund
+export function generateAdminRefundNotificationEmail(
+  customerName: string,
+  customerEmail: string,
+  itemDescription: string,
+  amount: number,
+  reason: string
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Refund Processed</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); padding: 30px 20px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">${STORE_NAME} Admin</h1>
+          </div>
+
+          <!-- Content -->
+          <div style="padding: 30px 20px;">
+            <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+              <h2 style="color: #dc2626; margin: 0; font-size: 18px;">💸 Refund Processed</h2>
+            </div>
+
+            <!-- Refund Details -->
+            <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin: 16px 0;">
+              <h3 style="margin-top: 0; color: #1f2937; font-size: 16px;">Refund Details</h3>
+              <p style="margin: 8px 0;"><strong>Customer:</strong> ${customerName}</p>
+              <p style="margin: 8px 0;"><strong>Email:</strong> ${customerEmail}</p>
+              <p style="margin: 8px 0;"><strong>Item:</strong> ${itemDescription}</p>
+              <p style="margin: 8px 0;"><strong>Amount:</strong> <span style="color: #dc2626; font-weight: bold;">$${amount.toFixed(2)}</span></p>
+              <p style="margin: 8px 0;"><strong>Reason:</strong> ${reason}</p>
+              <p style="margin: 8px 0;"><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+
+            <!-- Action Button -->
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://renfaye.com'}/admin/orders" style="display: inline-block; background-color: #1f2937; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">View Orders</a>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+// Send refund email
+export async function sendRefundEmail(
+  customerEmail: string,
+  customerName: string,
+  itemDescription: string,
+  amount: number,
+  reason: string,
+  adminEmail?: string
+) {
+  const customerHtml = generateRefundEmail(customerName, itemDescription, amount, reason);
+  
+  // Send to customer
+  const customerResult = await sendEmail({
+    to: customerEmail,
+    subject: `Refund Confirmation - ${STORE_NAME}`,
+    html: customerHtml,
+  });
+
+  // Send notification to admin if email provided
+  if (adminEmail) {
+    const adminHtml = generateAdminRefundNotificationEmail(customerName, customerEmail, itemDescription, amount, reason);
+    await sendEmail({
+      to: adminEmail,
+      subject: `Refund Processed: $${amount.toFixed(2)} for ${customerName}`,
+      html: adminHtml,
+    });
+  }
+
+  return customerResult;
+}

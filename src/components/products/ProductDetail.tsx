@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FiStar, FiHeart, FiShare2, FiCheck, FiMinus, FiPlus } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
+import { useUser } from '@/contexts/UserContext';
+import { contentManager } from '@/lib/content-manager';
+import { getMembershipBenefits, calculateProductDiscount } from '@/lib/membership-utils';
 
 interface Product {
   id: number;
@@ -22,6 +25,19 @@ interface Product {
   reviewCount: number;
 }
 
+interface MembershipTier {
+  id: string;
+  name: string;
+  price: number;
+  benefits?: {
+    productDiscount?: number;
+    serviceDiscount?: number;
+    pointsRate?: number;
+    freeRefillsPerMonth?: number;
+    freeFullSetsPerMonth?: number;
+  };
+}
+
 interface ProductDetailProps {
   product: Product;
 }
@@ -30,7 +46,25 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [membershipTiers, setMembershipTiers] = useState<MembershipTier[]>([]);
   const { addItem } = useCart();
+  const { user, isAuthenticated } = useUser();
+
+  useEffect(() => {
+    const fetchTiers = async () => {
+      const siteContent = await contentManager.getSiteContent();
+      setMembershipTiers(siteContent.membership?.tiers || []);
+    };
+    fetchTiers();
+  }, []);
+
+  const benefits = isAuthenticated && user?.membership?.status === 'active'
+    ? getMembershipBenefits(user.membership.tierId, membershipTiers)
+    : null;
+
+  const discountedPrice = benefits 
+    ? calculateProductDiscount(product.price, benefits) 
+    : product.price;
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
@@ -126,7 +160,17 @@ export default function ProductDetail({ product }: ProductDetailProps) {
             {/* Product Name & Price */}
             <div>
               <h1 className="text-3xl font-serif font-bold mb-2">{product.name}</h1>
-              <p className="text-3xl font-bold text-primary-600">${product.price.toFixed(2)}</p>
+              {benefits ? (
+                <div className="flex items-center gap-3">
+                  <p className="text-3xl font-bold text-pink-600">${discountedPrice.toFixed(2)}</p>
+                  <p className="text-xl text-gray-400 line-through">${product.price.toFixed(2)}</p>
+                  <span className="bg-pink-100 text-pink-600 text-sm px-2 py-1 rounded-full">
+                    {benefits.productDiscount}% Member Discount
+                  </span>
+                </div>
+              ) : (
+                <p className="text-3xl font-bold text-primary-600">${product.price.toFixed(2)}</p>
+              )}
             </div>
 
             {/* Description */}
@@ -170,7 +214,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                 <button
                   onClick={handleAddToCart}
                   disabled={!product.inStock}
-                  className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white py-3 px-6 rounded-full font-medium transition-colors"
+                  className="flex-1 bg-pink-600 hover:bg-pink-700 disabled:bg-gray-300 text-white py-3 px-6 rounded-full font-medium transition-colors"
                 >
                   {product.inStock ? 'Add to Cart' : 'Out of Stock'}
                 </button>

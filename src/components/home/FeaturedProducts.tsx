@@ -1,47 +1,82 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { FiArrowRight } from 'react-icons/fi';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/contexts/CartContext';
+import { useUser } from '@/contexts/UserContext';
+import { contentManager } from '@/lib/content-manager';
+import { getMembershipBenefits, calculateProductDiscount } from '@/lib/membership-utils';
 
 type Product = {
-  id: number;
+  id: string;
   name: string;
   price: number;
   image: string;
+  images?: string[];
   category: string;
+  featured?: boolean;
 };
 
-const featuredProducts: Product[] = [
-  {
-    id: 1,
-    name: 'Classic Volume Lashes',
-    price: 49.99,
-    image: 'https://picsum.photos/600/800?random=2',
-    category: 'Volume Lashes',
-  },
-  {
-    id: 2,
-    name: 'Hybrid Volume Set',
-    price: 59.99,
-    image: 'https://picsum.photos/600/800?random=5',
-    category: 'Hybrid Lashes',
-  },
-  {
-    id: 3,
-    name: 'Mega Volume Set',
-    price: 69.99,
-    image: 'https://picsum.photos/600/800?random=8',
-    category: 'Volume Lashes',
-  },
-];
+interface MembershipTier {
+  id: string;
+  name: string;
+  price: number;
+  benefits?: {
+    productDiscount?: number;
+    serviceDiscount?: number;
+    pointsRate?: number;
+    freeRefillsPerMonth?: number;
+    freeFullSetsPerMonth?: number;
+  };
+}
 
 export default function FeaturedProducts() {
   const { addItem } = useCart();
+  const { user, isAuthenticated } = useUser();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [membershipTiers, setMembershipTiers] = useState<MembershipTier[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [productsRes, siteContent] = await Promise.all([
+          fetch('/api/products'),
+          contentManager.getSiteContent()
+        ]);
+        
+        if (productsRes.ok) {
+          const data = await productsRes.json();
+          const featured = data.filter((p: Product) => p.featured).slice(0, 3);
+          setProducts(featured.length > 0 ? featured : data.slice(0, 3));
+        }
+        setMembershipTiers(siteContent.membership?.tiers || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const getUserBenefits = () => {
+    if (!isAuthenticated || !user?.membership?.status || user.membership.status !== 'active') {
+      return null;
+    }
+    return getMembershipBenefits(user.membership.tierId, membershipTiers);
+  };
+
+  const benefits = getUserBenefits();
 
   const handleAddToCart = (product: Product) => {
-    addItem(product);
+    addItem({
+      ...product,
+      id: parseInt(product.id) || 0,
+      image: product.images?.[0] || product.image || ''
+    });
   };
 
   return (
@@ -55,11 +90,23 @@ export default function FeaturedProducts() {
         </div>
         
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto">
-          {featuredProducts.map((product) => (
+          {isLoading ? (
+            // Loading skeleton
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg overflow-hidden shadow-md animate-pulse">
+                <div className="h-48 sm:h-56 lg:h-64 bg-gray-200" />
+                <div className="p-3 sm:p-5 lg:p-6">
+                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
+                  <div className="h-6 bg-gray-200 rounded w-2/3 mb-2" />
+                  <div className="h-6 bg-gray-200 rounded w-1/4" />
+                </div>
+              </div>
+            ))
+          ) : products.map((product) => (
             <div key={product.id} className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
               <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden">
                 <Image
-                  src={product.image}
+                  src={product.images?.[0] || product.image || '/placeholder-product.jpg'}
                   alt={product.name}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -77,7 +124,18 @@ export default function FeaturedProducts() {
                 <span className="text-xs sm:text-sm text-pink-600 font-medium">{product.category}</span>
                 <h3 className="text-sm sm:text-lg lg:text-xl font-semibold mt-1 mb-2 line-clamp-2">{product.name}</h3>
                 <div className="flex justify-between items-center">
-                  <span className="text-base sm:text-xl font-bold">${product.price.toFixed(2)}</span>
+                  {benefits ? (
+                    <div className="flex flex-col">
+                      <span className="text-base sm:text-xl font-bold text-pink-600">
+                        ${calculateProductDiscount(product.price, benefits).toFixed(2)}
+                      </span>
+                      <span className="text-xs text-gray-400 line-through">
+                        ${product.price.toFixed(2)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-base sm:text-xl font-bold">${product.price.toFixed(2)}</span>
+                  )}
                   <Link 
                     href={`/products/${product.id}`}
                     className="text-gray-500 hover:text-pink-500 transition-colors p-1"

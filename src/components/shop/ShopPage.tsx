@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiGrid, FiList } from 'react-icons/fi';
+import { FiGrid, FiList, FiStar } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
-import { contentManager, Product } from '@/lib/content-manager';
+import { useUser } from '@/contexts/UserContext';
+import { contentManager, Product, SiteContent } from '@/lib/content-manager';
+import { calculateMemberProductPrice, MembershipBenefits } from '@/lib/membership-utils';
 
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -13,7 +15,9 @@ export default function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('featured');
+  const [membershipTiers, setMembershipTiers] = useState<SiteContent['membership']['tiers']>([]);
   const { addItem } = useCart();
+  const { user, isAuthenticated } = useUser();
 
   useEffect(() => {
     loadProducts();
@@ -21,16 +25,31 @@ export default function ShopPage() {
 
   const loadProducts = async () => {
     try {
-      const allProducts = await contentManager.getProducts();
+      const [allProducts, siteContent] = await Promise.all([
+        contentManager.getProducts(),
+        contentManager.getSiteContent()
+      ]);
       // Only show products that are in stock
       const availableProducts = allProducts.filter(p => p.inStock);
       setProducts(availableProducts);
+      setMembershipTiers(siteContent.membership?.tiers || []);
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Get user's membership benefits
+  const getUserMembershipBenefits = (): MembershipBenefits | null => {
+    if (!isAuthenticated || !user?.membership?.status || user.membership.status !== 'active') {
+      return null;
+    }
+    const tier = membershipTiers.find(t => t.id === user.membership?.tierId);
+    return tier?.benefits || null;
+  };
+
+  const memberBenefits = getUserMembershipBenefits();
 
   // Get unique categories from products
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
@@ -210,12 +229,31 @@ export default function ShopPage() {
 
                 {/* Price */}
                 <div className="flex items-center justify-between mt-auto">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-base sm:text-lg font-bold">${product.price.toFixed(2)}</span>
-                    {product.originalPrice && (
-                      <span className="text-xs sm:text-sm text-gray-500 line-through">
-                        ${product.originalPrice.toFixed(2)}
-                      </span>
+                  <div className="flex flex-col">
+                    {memberBenefits && memberBenefits.productDiscount > 0 ? (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="text-base sm:text-lg font-bold text-pink-600">
+                            ${calculateMemberProductPrice(product.price, memberBenefits).price.toFixed(2)}
+                          </span>
+                          <span className="text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full flex items-center">
+                            <FiStar className="w-3 h-3 mr-1" />
+                            {memberBenefits.productDiscount}% off
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 line-through">
+                          ${product.price.toFixed(2)}
+                        </span>
+                      </>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-base sm:text-lg font-bold">${product.price.toFixed(2)}</span>
+                        {product.originalPrice && (
+                          <span className="text-xs sm:text-sm text-gray-500 line-through">
+                            ${product.originalPrice.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                   <Link

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getOrders, saveOrders } from '@/lib/db';
+import { getOrders, saveOrders, getUsers, saveUsers } from '@/lib/db';
+import { getAppointments, saveAppointments } from '@/lib/db';
 
 // Lazy initialize Stripe client
 let stripeClient: Stripe | null = null;
@@ -44,9 +45,10 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const orderId = session.metadata?.orderId;
+        const appointmentId = session.metadata?.appointmentId;
 
+        // Handle product order payment
         if (orderId) {
-          // Update order status
           const orders = await getOrders();
           const order = orders.find(o => o.id === orderId);
 
@@ -59,6 +61,70 @@ export async function POST(request: NextRequest) {
             
             await saveOrders(orders);
             console.log(`Order ${orderId} marked as paid`);
+          }
+        }
+
+        // Handle appointment/service payment with points
+        if (appointmentId) {
+          const appointments = await getAppointments();
+          const appointment = appointments.find(a => a.id === appointmentId);
+
+          if (appointment) {
+            appointment.status = 'confirmed';
+            appointment.paymentStatus = 'paid';
+            appointment.paymentIntentId = session.payment_intent as string;
+            appointment.updatedAt = new Date().toISOString();
+
+            // Process points for the user
+            if (appointment.userId) {
+              const users = await getUsers();
+              const userIndex = users.findIndex(u => u.id === appointment.userId);
+
+              if (userIndex !== -1) {
+                const user = users[userIndex];
+                
+                // Initialize points if not exists
+                if (!user.points) {
+                  user.points = { balance: 0, lifetimeEarned: 0, history: [] };
+                }
+
+                // Deduct redeemed points
+                if (appointment.pointsRedeemed && appointment.pointsRedeemed > 0) {
+                  user.points.balance -= appointment.pointsRedeemed;
+                  user.points.history.push({
+                    id: `pts-${Date.now()}-redeem`,
+                    date: new Date().toISOString(),
+                    type: 'redeemed',
+                    amount: -appointment.pointsRedeemed,
+                    description: `Redeemed for ${appointment.serviceName}`,
+                    orderId: appointmentId
+                  });
+                  console.log(`Deducted ${appointment.pointsRedeemed} points from user ${user.id}`);
+                }
+
+                // Add earned points
+                if (appointment.pointsToEarn && appointment.pointsToEarn > 0) {
+                  user.points.balance += appointment.pointsToEarn;
+                  user.points.lifetimeEarned += appointment.pointsToEarn;
+                  user.points.history.push({
+                    id: `pts-${Date.now()}-earn`,
+                    date: new Date().toISOString(),
+                    type: 'earned',
+                    amount: appointment.pointsToEarn,
+                    description: `Earned from ${appointment.serviceName}`,
+                    orderId: appointmentId
+                  });
+                  console.log(`Added ${appointment.pointsToEarn} points to user ${user.id}`);
+                }
+
+                user.updatedAt = new Date().toISOString();
+                users[userIndex] = user;
+                await saveUsers(users);
+              }
+            }
+
+            await saveAppointments(appointments);
+            console.log(`Appointment ${appointmentId} confirmed and points processed`);
           }
         }
         break;

@@ -3,16 +3,34 @@
 import { useState, useEffect } from 'react';
 import { Service, contentManager } from '@/lib/content-manager';
 import { useUser } from '@/contexts/UserContext';
-import { FiX, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiDollarSign } from 'react-icons/fi';
+import { FiX, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiDollarSign, FiStar, FiGift } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { loadStripe } from '@stripe/stripe-js';
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+import { 
+  POINTS_CONFIG, 
+  calculatePointsEarned, 
+  canRedeemPoints, 
+  calculateMaxRedeemablePoints,
+  calculatePointsDiscount,
+  getMembershipBenefits
+} from '@/lib/membership-utils';
 
 interface BookingModalProps {
   service: Service;
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface MembershipTier {
+  id: string;
+  name: string;
+  price: number;
+  benefits?: {
+    productDiscount?: number;
+    serviceDiscount?: number;
+    pointsRate?: number;
+    freeRefillsPerMonth?: number;
+    freeFullSetsPerMonth?: number;
+  };
 }
 
 export default function BookingModal({ service, isOpen, onClose }: BookingModalProps) {
@@ -23,6 +41,9 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [membershipTiers, setMembershipTiers] = useState<MembershipTier[]>([]);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+  const [usePoints, setUsePoints] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -30,6 +51,27 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
     phone: '',
     notes: ''
   });
+
+  // Get membership benefits and points
+  const userPoints = user?.points?.balance || 0;
+  const canRedeem = canRedeemPoints(userPoints);
+  const benefits = isAuthenticated && user?.membership?.status === 'active'
+    ? getMembershipBenefits(user.membership.tierId, membershipTiers)
+    : null;
+  const pointsRate = benefits?.pointsRate || 0;
+  const maxRedeemable = calculateMaxRedeemablePoints(userPoints, service.price);
+  const pointsDiscount = usePoints ? calculatePointsDiscount(pointsToRedeem) : 0;
+  const finalPrice = Math.max(0, service.price - pointsDiscount);
+  const pointsToEarn = pointsRate > 0 ? calculatePointsEarned(finalPrice, pointsRate) : 0;
+
+  // Fetch membership tiers
+  useEffect(() => {
+    const fetchTiers = async () => {
+      const siteContent = await contentManager.getSiteContent();
+      setMembershipTiers(siteContent.membership?.tiers || []);
+    };
+    fetchTiers();
+  }, []);
 
   // Auto-populate form with user data
   useEffect(() => {
@@ -93,7 +135,7 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
 
     setLoading(true);
     try {
-      // Create appointment
+      // Create appointment with points data
       const appointment = await contentManager.createAppointment({
         serviceId: service.id,
         serviceName: service.name,
@@ -102,19 +144,23 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
         customerPhone: formData.phone,
         date: selectedDate,
         time: selectedTime,
-        price: service.price,
+        price: finalPrice,
+        originalPrice: service.price,
+        pointsRedeemed: usePoints ? pointsToRedeem : 0,
+        pointsDiscount: pointsDiscount,
+        pointsToEarn: pointsToEarn,
+        userId: user?.id,
         status: 'pending',
         paymentStatus: 'pending',
         notes: formData.notes
       });
 
       // Create Stripe checkout session
-      const { sessionId } = await contentManager.createCheckoutSession(appointment.id);
+      const { url } = await contentManager.createCheckoutSession(appointment.id);
       
       // Redirect to Stripe checkout
-      const stripe = await stripePromise;
-      if (stripe) {
-        await stripe.redirectToCheckout({ sessionId });
+      if (url) {
+        window.location.href = url;
       }
     } catch (error) {
       console.error('Booking error:', error);
@@ -147,13 +193,97 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
           <div className="bg-pink-50 rounded-lg p-4 mb-6">
             <div className="flex justify-between items-center mb-2">
               <span className="text-gray-700">{service.duration}</span>
-              <span className="text-pink-600 font-bold text-xl flex items-center">
-                <FiDollarSign className="w-5 h-5" />
-                {service.price.toFixed(2)}
-              </span>
+              <div className="text-right">
+                {pointsDiscount > 0 ? (
+                  <>
+                    <span className="text-pink-600 font-bold text-xl">${finalPrice.toFixed(2)}</span>
+                    <span className="text-gray-400 text-sm line-through ml-2">${service.price.toFixed(2)}</span>
+                  </>
+                ) : (
+                  <span className="text-pink-600 font-bold text-xl flex items-center">
+                    <FiDollarSign className="w-5 h-5" />
+                    {service.price.toFixed(2)}
+                  </span>
+                )}
+              </div>
             </div>
             <p className="text-sm text-gray-600">{service.description}</p>
+            
+            {/* Points Earning Preview */}
+            {pointsToEarn > 0 && (
+              <div className="mt-3 pt-3 border-t border-pink-200 flex items-center text-sm text-pink-600">
+                <FiStar className="w-4 h-4 mr-1" />
+                <span>Earn <strong>{pointsToEarn} points</strong> with this booking</span>
+              </div>
+            )}
           </div>
+
+          {/* Points Redemption Section */}
+          {isAuthenticated && canRedeem && (
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 mb-6 border border-purple-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center">
+                  <FiGift className="w-5 h-5 text-purple-600 mr-2" />
+                  <span className="font-medium text-gray-900">Redeem Points</span>
+                </div>
+                <span className="text-sm text-gray-600">
+                  Balance: <strong>{userPoints} pts</strong>
+                </span>
+              </div>
+              
+              <label className="flex items-center cursor-pointer mb-3">
+                <input
+                  type="checkbox"
+                  checked={usePoints}
+                  onChange={(e) => {
+                    setUsePoints(e.target.checked);
+                    if (e.target.checked) {
+                      setPointsToRedeem(Math.min(maxRedeemable, userPoints));
+                    } else {
+                      setPointsToRedeem(0);
+                    }
+                  }}
+                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  Use points for this booking (1 point = $1)
+                </span>
+              </label>
+
+              {usePoints && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={POINTS_CONFIG.MINIMUM_REDEMPTION}
+                      max={maxRedeemable}
+                      value={pointsToRedeem}
+                      onChange={(e) => setPointsToRedeem(parseInt(e.target.value))}
+                      className="flex-1 h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <span className="text-sm font-medium text-purple-600 w-20 text-right">
+                      {pointsToRedeem} pts
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Min: {POINTS_CONFIG.MINIMUM_REDEMPTION}</span>
+                    <span>Max: {maxRedeemable}</span>
+                  </div>
+                  <div className="bg-white rounded p-2 text-center">
+                    <span className="text-sm text-gray-600">Discount: </span>
+                    <span className="font-bold text-purple-600">-${pointsDiscount.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
+              {!canRedeem && userPoints > 0 && (
+                <p className="text-xs text-gray-500 mt-2">
+                  You need at least {POINTS_CONFIG.MINIMUM_REDEMPTION} points to redeem. 
+                  You have {userPoints} points.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Step Indicator */}
           <div className="flex items-center justify-center mb-6">

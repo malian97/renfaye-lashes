@@ -6,7 +6,6 @@ import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { FiPackage, FiShoppingCart, FiUsers, FiTrendingUp, FiEdit, FiImage, FiFileText, FiSettings, FiClock, FiMail, FiCalendar } from 'react-icons/fi';
 import Link from 'next/link';
-import { contentManager } from '@/lib/content-manager';
 
 export default function AdminDashboard() {
   const { isAdmin, isLoading } = useAdmin();
@@ -14,9 +13,15 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({
     products: 0,
     orders: 0,
-    revenue: 0,
-    customers: 0
+    bookings: 0,
+    totalRevenue: 0,
+    productRevenue: 0,
+    serviceRevenue: 0,
+    membershipRevenue: 0,
+    customers: 0,
+    activeMembers: 0
   });
+  const [timePeriod, setTimePeriod] = useState<string>('all');
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
@@ -25,22 +30,23 @@ export default function AdminDashboard() {
   }, [isAdmin, isLoading, router]);
 
   useEffect(() => {
-    // Load stats
+    // Load stats from server-side API
     const loadStats = async () => {
-      const products = await contentManager.getProducts();
-      const orders = await contentManager.getOrders();
-      const revenue = orders.reduce((sum, order) => sum + order.total, 0);
-      
-      setStats({
-        products: products.length,
-        orders: orders.length,
-        revenue,
-        customers: new Set(orders.map(o => o.customerEmail)).size
-      });
+      try {
+        const res = await fetch(`/api/admin/stats?period=${timePeriod}`);
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
+        } else {
+          console.error('Failed to fetch stats:', res.status);
+        }
+      } catch (e) {
+        console.error('Error fetching stats:', e);
+      }
     };
     
     loadStats();
-  }, []);
+  }, [timePeriod]);
 
   if (isLoading) {
     return (
@@ -76,16 +82,16 @@ export default function AdminDashboard() {
           <p className="text-gray-600 mt-2">Welcome back! Here&apos;s an overview of your website.</p>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Main Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Products</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{stats.products}</p>
+                <p className="text-sm text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-bold text-green-600 mt-1">${stats.totalRevenue.toFixed(2)}</p>
               </div>
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <FiPackage className="w-6 h-6 text-blue-600" />
+              <div className="bg-green-100 p-3 rounded-lg">
+                <FiTrendingUp className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
@@ -96,8 +102,8 @@ export default function AdminDashboard() {
                 <p className="text-sm text-gray-600">Total Orders</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">{stats.orders}</p>
               </div>
-              <div className="bg-green-100 p-3 rounded-lg">
-                <FiShoppingCart className="w-6 h-6 text-green-600" />
+              <div className="bg-blue-100 p-3 rounded-lg">
+                <FiShoppingCart className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </div>
@@ -105,11 +111,11 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">${stats.revenue.toFixed(2)}</p>
+                <p className="text-sm text-gray-600">Total Bookings</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{stats.bookings}</p>
               </div>
               <div className="bg-purple-100 p-3 rounded-lg">
-                <FiTrendingUp className="w-6 h-6 text-purple-600" />
+                <FiCalendar className="w-6 h-6 text-purple-600" />
               </div>
             </div>
           </div>
@@ -122,6 +128,63 @@ export default function AdminDashboard() {
               </div>
               <div className="bg-pink-100 p-3 rounded-lg">
                 <FiUsers className="w-6 h-6 text-pink-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Revenue Breakdown */}
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Revenue Breakdown</h2>
+            <select
+              value={timePeriod}
+              onChange={(e) => setTimePeriod(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+            >
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="lastMonth">Last Month</option>
+              <option value="year">This Year</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Product Sales</p>
+                  <p className="text-2xl font-bold text-blue-600 mt-1">${stats.productRevenue.toFixed(2)}</p>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <FiPackage className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Service Bookings</p>
+                  <p className="text-2xl font-bold text-purple-600 mt-1">${stats.serviceRevenue.toFixed(2)}</p>
+                </div>
+                <div className="bg-purple-100 p-3 rounded-lg">
+                  <FiClock className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-pink-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Memberships (Monthly)</p>
+                  <p className="text-2xl font-bold text-pink-600 mt-1">${stats.membershipRevenue.toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 mt-1">{stats.activeMembers} active member{stats.activeMembers !== 1 ? 's' : ''}</p>
+                </div>
+                <div className="bg-pink-100 p-3 rounded-lg">
+                  <FiUsers className="w-6 h-6 text-pink-600" />
+                </div>
               </div>
             </div>
           </div>

@@ -6,8 +6,10 @@ import { useCart } from '@/contexts/CartContext';
 import { useUser } from '@/contexts/UserContext';
 import { loadStripe } from '@stripe/stripe-js';
 import Image from 'next/image';
-import { FiMinus, FiPlus, FiTrash2, FiShoppingBag } from 'react-icons/fi';
+import { FiMinus, FiPlus, FiTrash2, FiShoppingBag, FiStar } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { contentManager, SiteContent } from '@/lib/content-manager';
+import { calculateMemberProductPrice, MembershipBenefits, calculatePointsEarned } from '@/lib/membership-utils';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -19,6 +21,7 @@ export default function CheckoutPage() {
   const [shippingCost, setShippingCost] = useState(15); // Default $15
   const [taxRate, setTaxRate] = useState(0); // Default 0%
   const [loadingSettings, setLoadingSettings] = useState(true);
+  const [membershipTiers, setMembershipTiers] = useState<SiteContent['membership']['tiers']>([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -48,16 +51,20 @@ export default function CheckoutPage() {
     }
   }, [isAuthenticated, user]);
 
-  // Load shipping cost and tax rate from settings
+  // Load shipping cost, tax rate, and membership tiers from settings
   useEffect(() => {
     async function loadSettings() {
       try {
-        const response = await fetch('/api/settings');
-        if (response.ok) {
-          const settings = await response.json();
+        const [settingsRes, siteContent] = await Promise.all([
+          fetch('/api/settings'),
+          contentManager.getSiteContent()
+        ]);
+        if (settingsRes.ok) {
+          const settings = await settingsRes.json();
           setShippingCost(settings.shippingCost || 15);
           setTaxRate(settings.taxRate || 0);
         }
+        setMembershipTiers(siteContent.membership?.tiers || []);
       } catch (error) {
         console.error('Error loading settings:', error);
       } finally {
@@ -67,7 +74,32 @@ export default function CheckoutPage() {
     loadSettings();
   }, []);
 
-  const subtotal = state.total;
+  // Get user's membership benefits
+  const getUserMembershipBenefits = (): MembershipBenefits | null => {
+    if (!isAuthenticated || !user?.membership?.status || user.membership.status !== 'active') {
+      return null;
+    }
+    const tier = membershipTiers.find(t => t.id === user.membership?.tierId);
+    return tier?.benefits || null;
+  };
+
+  const memberBenefits = getUserMembershipBenefits();
+
+  // Calculate subtotal with membership discount
+  const calculateSubtotal = () => {
+    if (!memberBenefits || memberBenefits.productDiscount <= 0) {
+      return state.total;
+    }
+    return state.items.reduce((total, item) => {
+      const { price } = calculateMemberProductPrice(item.price, memberBenefits);
+      return total + (price * item.quantity);
+    }, 0);
+  };
+
+  const originalSubtotal = state.total;
+  const subtotal = calculateSubtotal();
+  const memberDiscount = originalSubtotal - subtotal;
+  // Points are only earned on services, not products - removed from product checkout
   const taxAmount = subtotal * (taxRate / 100);
   const totalWithShipping = subtotal + shippingCost + taxAmount;
 
@@ -382,8 +414,17 @@ export default function CheckoutPage() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${subtotal.toFixed(2)}</span>
+                  <span className="font-medium">${originalSubtotal.toFixed(2)}</span>
                 </div>
+                {memberDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span className="flex items-center">
+                      <FiStar className="w-3 h-3 mr-1" />
+                      Member Discount ({memberBenefits?.productDiscount}%)
+                    </span>
+                    <span className="font-medium">-${memberDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
                   <span className="font-medium">${shippingCost.toFixed(2)}</span>
@@ -398,6 +439,7 @@ export default function CheckoutPage() {
                   <span>Total</span>
                   <span className="text-pink-600">${totalWithShipping.toFixed(2)}</span>
                 </div>
+                {/* Points are only earned on services, not products */}
               </div>
 
               <button

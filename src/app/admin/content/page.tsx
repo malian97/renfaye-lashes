@@ -13,7 +13,7 @@ export default function AdminContent() {
   const { isAdmin, isLoading } = useAdmin();
   const router = useRouter();
   const [content, setContent] = useState<SiteContent | null>(null);
-  const [activeTab, setActiveTab] = useState<'hero' | 'about' | 'testimonials' | 'policy' | 'contact' | 'sizeGuide'>('hero');
+  const [activeTab, setActiveTab] = useState<'hero' | 'about' | 'testimonials' | 'policy' | 'contact' | 'sizeGuide' | 'membership'>('hero');
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -124,7 +124,7 @@ export default function AdminContent() {
         <div className="bg-white rounded-xl shadow-md">
           <div className="border-b">
             <nav className="flex space-x-8 px-6 overflow-x-auto" aria-label="Tabs">
-              {['hero', 'about', 'testimonials', 'policy', 'contact', 'sizeGuide'].map((tab) => (
+              {['hero', 'about', 'testimonials', 'policy', 'contact', 'sizeGuide', 'membership'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as typeof activeTab)}
@@ -1311,6 +1311,373 @@ export default function AdminContent() {
                           onChange={(e) => updateContent('sizeGuide', {
                             ...content.sizeGuide,
                             cta: { ...content.sizeGuide.cta, secondaryButtonLink: e.target.value }
+                          })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Membership Section */}
+            {activeTab === 'membership' && content.membership && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold mb-4">Membership Page</h2>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Page Title</label>
+                  <input
+                    type="text"
+                    value={content.membership.title}
+                    onChange={(e) => updateContent('membership', { ...content.membership, title: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                  <textarea
+                    value={content.membership.subtitle}
+                    onChange={(e) => updateContent('membership', { ...content.membership, subtitle: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  />
+                </div>
+
+                {/* Benefits */}
+                <div className="border-t pt-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium">Member Benefits</h3>
+                    <button
+                      onClick={() => {
+                        const newBenefit = { id: Date.now().toString(), title: 'New Benefit', description: 'Description' };
+                        updateContent('membership', {
+                          ...content.membership,
+                          benefits: [...content.membership.benefits, newBenefit]
+                        });
+                      }}
+                      className="bg-pink-600 text-white px-3 py-1 rounded-lg hover:bg-pink-700 transition-colors flex items-center text-sm"
+                    >
+                      <FiPlus className="mr-1" /> Add Benefit
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {content.membership.benefits.map((benefit, index) => (
+                      <div key={benefit.id} className="flex gap-4 items-start bg-gray-50 p-4 rounded-lg">
+                        <div className="flex-1 grid grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            value={benefit.title}
+                            onChange={(e) => {
+                              const newBenefits = [...content.membership.benefits];
+                              newBenefits[index].title = e.target.value;
+                              updateContent('membership', { ...content.membership, benefits: newBenefits });
+                            }}
+                            placeholder="Benefit Title"
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                          />
+                          <input
+                            type="text"
+                            value={benefit.description}
+                            onChange={(e) => {
+                              const newBenefits = [...content.membership.benefits];
+                              newBenefits[index].description = e.target.value;
+                              updateContent('membership', { ...content.membership, benefits: newBenefits });
+                            }}
+                            placeholder="Description"
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                          />
+                        </div>
+                        <button
+                          onClick={() => {
+                            const newBenefits = content.membership.benefits.filter((_, i) => i !== index);
+                            updateContent('membership', { ...content.membership, benefits: newBenefits });
+                          }}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <FiTrash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Membership Tiers */}
+                <div className="border-t pt-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium">Membership Tiers</h3>
+                    <button
+                      onClick={() => {
+                        const newTier = {
+                          id: Date.now().toString(),
+                          name: 'New Tier',
+                          price: 0,
+                          popular: false,
+                          features: ['Feature 1'],
+                          benefits: {
+                            productDiscount: 10,
+                            serviceDiscount: 0,
+                            pointsRate: 5,
+                            freeRefillsPerMonth: 2,
+                            freeFullSetsPerMonth: 0,
+                            includedServiceIds: []
+                          }
+                        };
+                        updateContent('membership', {
+                          ...content.membership,
+                          tiers: [...content.membership.tiers, newTier]
+                        });
+                      }}
+                      className="bg-pink-600 text-white px-3 py-1 rounded-lg hover:bg-pink-700 transition-colors flex items-center text-sm"
+                    >
+                      <FiPlus className="mr-1" /> Add Tier
+                    </button>
+                  </div>
+                  <div className="space-y-6">
+                    {content.membership.tiers.map((tier, index) => (
+                      <div key={tier.id} className="bg-gray-50 p-4 rounded-lg space-y-4">
+                        <div className="grid grid-cols-3 gap-4">
+                          <input
+                            type="text"
+                            value={tier.name}
+                            onChange={(e) => {
+                              const newTiers = [...content.membership.tiers];
+                              newTiers[index].name = e.target.value;
+                              updateContent('membership', { ...content.membership, tiers: newTiers });
+                            }}
+                            placeholder="Tier Name"
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                          />
+                          <div className="flex items-center">
+                            <span className="mr-2">$</span>
+                            <input
+                              type="number"
+                              value={tier.price}
+                              onChange={(e) => {
+                                const newTiers = [...content.membership.tiers];
+                                newTiers[index].price = Number(e.target.value);
+                                updateContent('membership', { ...content.membership, tiers: newTiers });
+                              }}
+                              placeholder="Price"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                            />
+                            <span className="ml-2">/mo</span>
+                          </div>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={tier.popular}
+                              onChange={(e) => {
+                                const newTiers = [...content.membership.tiers];
+                                newTiers[index].popular = e.target.checked;
+                                updateContent('membership', { ...content.membership, tiers: newTiers });
+                              }}
+                              className="mr-2 rounded text-pink-600 focus:ring-pink-500"
+                            />
+                            Mark as Popular
+                          </label>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Features (one per line)</label>
+                          <textarea
+                            value={tier.features.join('\n')}
+                            onChange={(e) => {
+                              const newTiers = [...content.membership.tiers];
+                              newTiers[index].features = e.target.value.split('\n').filter(f => f.trim());
+                              updateContent('membership', { ...content.membership, tiers: newTiers });
+                            }}
+                            rows={4}
+                            placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                          />
+                        </div>
+                        
+                        {/* Benefits Configuration */}
+                        <div className="border-t pt-4 mt-4">
+                          <h4 className="text-sm font-semibold text-gray-800 mb-3">Benefits Configuration</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Product Discount (%)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={tier.benefits?.productDiscount || 0}
+                                onChange={(e) => {
+                                  const newTiers = [...content.membership.tiers];
+                                  newTiers[index].benefits = {
+                                    ...newTiers[index].benefits,
+                                    productDiscount: Number(e.target.value)
+                                  };
+                                  updateContent('membership', { ...content.membership, tiers: newTiers });
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Service Discount (%)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={tier.benefits?.serviceDiscount || 0}
+                                onChange={(e) => {
+                                  const newTiers = [...content.membership.tiers];
+                                  newTiers[index].benefits = {
+                                    ...newTiers[index].benefits,
+                                    serviceDiscount: Number(e.target.value)
+                                  };
+                                  updateContent('membership', { ...content.membership, tiers: newTiers });
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Points Rate (%)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={tier.benefits?.pointsRate || 0}
+                                onChange={(e) => {
+                                  const newTiers = [...content.membership.tiers];
+                                  newTiers[index].benefits = {
+                                    ...newTiers[index].benefits,
+                                    pointsRate: Number(e.target.value)
+                                  };
+                                  updateContent('membership', { ...content.membership, tiers: newTiers });
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Free Refills/Month</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={tier.benefits?.freeRefillsPerMonth || 0}
+                                onChange={(e) => {
+                                  const newTiers = [...content.membership.tiers];
+                                  newTiers[index].benefits = {
+                                    ...newTiers[index].benefits,
+                                    freeRefillsPerMonth: Number(e.target.value)
+                                  };
+                                  updateContent('membership', { ...content.membership, tiers: newTiers });
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Free Full Sets/Month</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={tier.benefits?.freeFullSetsPerMonth || 0}
+                                onChange={(e) => {
+                                  const newTiers = [...content.membership.tiers];
+                                  newTiers[index].benefits = {
+                                    ...newTiers[index].benefits,
+                                    freeFullSetsPerMonth: Number(e.target.value)
+                                  };
+                                  updateContent('membership', { ...content.membership, tiers: newTiers });
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <button
+                          onClick={() => {
+                            const newTiers = content.membership.tiers.filter((_, i) => i !== index);
+                            updateContent('membership', { ...content.membership, tiers: newTiers });
+                          }}
+                          className="text-red-600 hover:text-red-700 flex items-center text-sm"
+                        >
+                          <FiTrash2 className="mr-1" /> Remove Tier
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* CTA Section */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium mb-4">Call-to-Action Section</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">CTA Title</label>
+                      <input
+                        type="text"
+                        value={content.membership.cta.title}
+                        onChange={(e) => updateContent('membership', {
+                          ...content.membership,
+                          cta: { ...content.membership.cta, title: e.target.value }
+                        })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">CTA Description</label>
+                      <textarea
+                        value={content.membership.cta.description}
+                        onChange={(e) => updateContent('membership', {
+                          ...content.membership,
+                          cta: { ...content.membership.cta, description: e.target.value }
+                        })}
+                        rows={3}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Primary Button Text</label>
+                        <input
+                          type="text"
+                          value={content.membership.cta.primaryButtonText}
+                          onChange={(e) => updateContent('membership', {
+                            ...content.membership,
+                            cta: { ...content.membership.cta, primaryButtonText: e.target.value }
+                          })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Primary Button Link</label>
+                        <input
+                          type="text"
+                          value={content.membership.cta.primaryButtonLink}
+                          onChange={(e) => updateContent('membership', {
+                            ...content.membership,
+                            cta: { ...content.membership.cta, primaryButtonLink: e.target.value }
+                          })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Secondary Button Text</label>
+                        <input
+                          type="text"
+                          value={content.membership.cta.secondaryButtonText}
+                          onChange={(e) => updateContent('membership', {
+                            ...content.membership,
+                            cta: { ...content.membership.cta, secondaryButtonText: e.target.value }
+                          })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Secondary Button Link</label>
+                        <input
+                          type="text"
+                          value={content.membership.cta.secondaryButtonLink}
+                          onChange={(e) => updateContent('membership', {
+                            ...content.membership,
+                            cta: { ...content.membership.cta, secondaryButtonLink: e.target.value }
                           })}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                         />

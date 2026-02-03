@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { contentManager, Order } from '@/lib/content-manager';
-import { FiPackage, FiClock, FiCheckCircle, FiSearch, FiEye } from 'react-icons/fi';
+import { FiPackage, FiClock, FiCheckCircle, FiSearch, FiEye, FiRefreshCw } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 export default function AdminOrders() {
@@ -14,8 +14,13 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [timePeriod, setTimePeriod] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundOrder, setRefundOrder] = useState<Order | null>(null);
+  const [refundReason, setRefundReason] = useState('');
+  const [isRefunding, setIsRefunding] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
@@ -49,13 +54,89 @@ export default function AdminOrders() {
     setShowOrderModal(true);
   };
 
+  const openRefundModal = (order: Order) => {
+    setRefundOrder(order);
+    setRefundReason('');
+    setShowRefundModal(true);
+  };
+
+  const handleRefund = async () => {
+    if (!refundOrder) return;
+    
+    setIsRefunding(true);
+    try {
+      const res = await fetch('/api/admin/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'order',
+          id: refundOrder.id,
+          reason: refundReason || 'Refund requested',
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success('Order refunded successfully');
+        setShowRefundModal(false);
+        setRefundOrder(null);
+        await loadOrders();
+      } else {
+        toast.error(data.error || 'Failed to process refund');
+      }
+    } catch (error) {
+      toast.error('Failed to process refund');
+    } finally {
+      setIsRefunding(false);
+    }
+  };
+
+  const getDateRangeStart = (period: string): Date | null => {
+    const now = new Date();
+    switch (period) {
+      case 'today':
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      case 'week':
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay());
+        weekStart.setHours(0, 0, 0, 0);
+        return weekStart;
+      case 'month':
+        return new Date(now.getFullYear(), now.getMonth(), 1);
+      case 'lastMonth':
+        return new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      case 'year':
+        return new Date(now.getFullYear(), 0, 1);
+      case 'all':
+      default:
+        return null;
+    }
+  };
+
+  const getDateRangeEnd = (period: string): Date | null => {
+    const now = new Date();
+    if (period === 'lastMonth') {
+      return new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    }
+    return null;
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.id.includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    
+    // Time period filter
+    const dateRangeStart = getDateRangeStart(timePeriod);
+    const dateRangeEnd = getDateRangeEnd(timePeriod);
+    const orderDate = new Date(order.createdAt);
+    const matchesTime = (!dateRangeStart || orderDate >= dateRangeStart) && 
+                        (!dateRangeEnd || orderDate <= dateRangeEnd);
+    
+    return matchesSearch && matchesStatus && matchesTime;
   });
 
 
@@ -98,7 +179,7 @@ export default function AdminOrders() {
               <div>
                 <p className="text-sm text-gray-600">Pending</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {orders.filter(o => o.status === 'pending').length}
+                  {filteredOrders.filter(o => o.status === 'pending').length}
                 </p>
               </div>
               <FiClock className="w-8 h-8 text-yellow-600" />
@@ -109,7 +190,7 @@ export default function AdminOrders() {
               <div>
                 <p className="text-sm text-gray-600">Processing</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {orders.filter(o => o.status === 'processing').length}
+                  {filteredOrders.filter(o => o.status === 'processing').length}
                 </p>
               </div>
               <FiPackage className="w-8 h-8 text-blue-600" />
@@ -120,7 +201,7 @@ export default function AdminOrders() {
               <div>
                 <p className="text-sm text-gray-600">Completed</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {orders.filter(o => o.status === 'completed').length}
+                  {filteredOrders.filter(o => o.status === 'completed').length}
                 </p>
               </div>
               <FiCheckCircle className="w-8 h-8 text-green-600" />
@@ -131,7 +212,7 @@ export default function AdminOrders() {
               <div>
                 <p className="text-sm text-gray-600">Total Revenue</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${orders.reduce((sum, o) => sum + o.total, 0).toFixed(2)}
+                  ${filteredOrders.filter(o => o.paymentStatus !== 'refunded' && o.status !== 'cancelled').reduce((sum, o) => sum + o.total, 0).toFixed(2)}
                 </p>
               </div>
             </div>
@@ -163,6 +244,18 @@ export default function AdminOrders() {
               <option value="processing">Processing</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
+            </select>
+            <select
+              value={timePeriod}
+              onChange={(e) => setTimePeriod(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+            >
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="lastMonth">Last Month</option>
+              <option value="year">This Year</option>
+              <option value="all">All Time</option>
             </select>
           </div>
         </div>
@@ -236,13 +329,23 @@ export default function AdminOrders() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                         <button
                           onClick={() => viewOrderDetails(order)}
                           className="text-pink-600 hover:text-pink-900"
+                          title="View Details"
                         >
                           <FiEye className="inline w-4 h-4" />
                         </button>
+                        {(order.paymentStatus === 'paid' || order.status === 'completed') && order.paymentStatus !== 'refunded' && order.status !== 'cancelled' && (
+                          <button
+                            onClick={() => openRefundModal(order)}
+                            className="text-red-600 hover:text-red-900 ml-2"
+                            title="Refund Order"
+                          >
+                            <FiRefreshCw className="inline w-4 h-4" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -309,6 +412,69 @@ export default function AdminOrders() {
                       <p>${selectedOrder.total.toFixed(2)}</p>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Refund Confirmation Modal */}
+        {showRefundModal && refundOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-bold text-red-600">Confirm Refund</h2>
+                  <button
+                    onClick={() => setShowRefundModal(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="mb-6">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                    <p className="text-red-800 font-medium">
+                      You are about to refund this order. This action cannot be undone.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    <p><strong>Order ID:</strong> #{refundOrder.id.slice(0, 8)}</p>
+                    <p><strong>Customer:</strong> {refundOrder.customerName}</p>
+                    <p><strong>Amount:</strong> <span className="text-red-600 font-bold">${refundOrder.total.toFixed(2)}</span></p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Refund Reason (optional)
+                    </label>
+                    <textarea
+                      value={refundReason}
+                      onChange={(e) => setRefundReason(e.target.value)}
+                      placeholder="Enter reason for refund..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowRefundModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    disabled={isRefunding}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRefund}
+                    disabled={isRefunding}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isRefunding ? 'Processing...' : 'Confirm Refund'}
+                  </button>
                 </div>
               </div>
             </div>

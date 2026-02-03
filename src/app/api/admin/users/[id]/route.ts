@@ -112,6 +112,63 @@ export async function PATCH(
       }
       user.passwordHash = bcrypt.hashSync(data.newPassword, 10);
       user.updatedAt = new Date().toISOString();
+    } else if (action === 'update-membership') {
+      const { membershipAction, tierId, tierName } = data;
+      
+      if (membershipAction === 'assign' || membershipAction === 'change') {
+        user.membership = {
+          tierId,
+          tierName,
+          status: 'active',
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          cancelAtPeriodEnd: false,
+          usage: {
+            currentPeriodStart: new Date().toISOString(),
+            refillsUsed: 0,
+            fullSetsUsed: 0
+          }
+        };
+        // Initialize points if not exists
+        if (!user.points) {
+          user.points = { balance: 0, lifetimeEarned: 0, history: [] };
+        }
+      } else if (membershipAction === 'cancel') {
+        if (user.membership) {
+          user.membership.status = 'cancelled';
+          user.membership.cancelAtPeriodEnd = true;
+        }
+      }
+      user.updatedAt = new Date().toISOString();
+    } else if (action === 'adjust-points') {
+      const { pointsAmount, reason } = data;
+      
+      if (!user.points) {
+        user.points = { balance: 0, lifetimeEarned: 0, history: [] };
+      }
+      
+      user.points.balance = Math.max(0, (user.points.balance || 0) + pointsAmount);
+      if (pointsAmount > 0) {
+        user.points.lifetimeEarned = (user.points.lifetimeEarned || 0) + pointsAmount;
+      }
+      
+      user.points.history = user.points.history || [];
+      user.points.history.unshift({
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        type: pointsAmount > 0 ? 'earned' : 'redeemed',
+        amount: Math.abs(pointsAmount),
+        description: reason || 'Admin adjustment'
+      });
+      user.updatedAt = new Date().toISOString();
+    } else if (action === 'reset-usage') {
+      if (user.membership?.usage) {
+        user.membership.usage = {
+          currentPeriodStart: new Date().toISOString(),
+          refillsUsed: 0,
+          fullSetsUsed: 0
+        };
+      }
+      user.updatedAt = new Date().toISOString();
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }

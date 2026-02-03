@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { contentManager, Appointment } from '@/lib/content-manager';
-import { FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiDollarSign, FiX, FiCheck, FiEdit, FiFilter } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiDollarSign, FiX, FiCheck, FiEdit, FiFilter, FiRefreshCw } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 export default function AdminBookings() {
@@ -18,6 +18,10 @@ export default function AdminBookings() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundBooking, setRefundBooking] = useState<Appointment | null>(null);
+  const [refundReason, setRefundReason] = useState('');
+  const [isRefunding, setIsRefunding] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
@@ -91,6 +95,45 @@ export default function AdminBookings() {
       setIsDetailModalOpen(false);
     } catch (error) {
       toast.error('Failed to update appointment');
+    }
+  };
+
+  const openRefundModal = (appointment: Appointment) => {
+    setRefundBooking(appointment);
+    setRefundReason('');
+    setShowRefundModal(true);
+    setIsDetailModalOpen(false);
+  };
+
+  const handleRefund = async () => {
+    if (!refundBooking) return;
+    
+    setIsRefunding(true);
+    try {
+      const res = await fetch('/api/admin/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'booking',
+          id: refundBooking.id,
+          reason: refundReason || 'Refund requested',
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success('Booking refunded successfully');
+        setShowRefundModal(false);
+        setRefundBooking(null);
+        await loadAppointments();
+      } else {
+        toast.error(data.error || 'Failed to process refund');
+      }
+    } catch (error) {
+      toast.error('Failed to process refund');
+    } finally {
+      setIsRefunding(false);
     }
   };
 
@@ -444,7 +487,80 @@ export default function AdminBookings() {
                       Cancel
                     </button>
                   )}
+                  {(selectedAppointment.paymentStatus === 'paid' || selectedAppointment.status === 'confirmed' || selectedAppointment.status === 'completed') && selectedAppointment.paymentStatus !== 'refunded' && selectedAppointment.status !== 'cancelled' && (
+                    <button
+                      onClick={() => openRefundModal(selectedAppointment)}
+                      className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center"
+                    >
+                      <FiRefreshCw className="mr-2" />
+                      Refund
+                    </button>
+                  )}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Refund Confirmation Modal */}
+      {showRefundModal && refundBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-xl font-bold text-red-600">Confirm Refund</h2>
+                <button
+                  onClick={() => setShowRefundModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-red-800 font-medium">
+                    You are about to refund this booking. This action cannot be undone.
+                  </p>
+                </div>
+
+                <div className="space-y-2 mb-4">
+                  <p><strong>Service:</strong> {refundBooking.serviceName}</p>
+                  <p><strong>Customer:</strong> {refundBooking.customerName}</p>
+                  <p><strong>Date:</strong> {new Date(refundBooking.date).toLocaleDateString()} at {refundBooking.time}</p>
+                  <p><strong>Amount:</strong> <span className="text-red-600 font-bold">${refundBooking.price.toFixed(2)}</span></p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Refund Reason (optional)
+                  </label>
+                  <textarea
+                    value={refundReason}
+                    onChange={(e) => setRefundReason(e.target.value)}
+                    placeholder="Enter reason for refund..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowRefundModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  disabled={isRefunding}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRefund}
+                  disabled={isRefunding}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isRefunding ? 'Processing...' : 'Confirm Refund'}
+                </button>
               </div>
             </div>
           </div>

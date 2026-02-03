@@ -1,14 +1,86 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import { useUser } from '@/contexts/UserContext';
+import { contentManager } from '@/lib/content-manager';
+import { getMembershipBenefits, calculateProductDiscount } from '@/lib/membership-utils';
+
+interface MembershipTier {
+  id: string;
+  name: string;
+  price: number;
+  benefits?: {
+    productDiscount?: number;
+    serviceDiscount?: number;
+    pointsRate?: number;
+    freeRefillsPerMonth?: number;
+    freeFullSetsPerMonth?: number;
+  };
+}
 
 export default function CartSidebar() {
   const router = useRouter();
   const { state, removeItem, updateQuantity, isOpen, toggleCart } = useCart();
+  const { user, isAuthenticated } = useUser();
+  const [membershipTiers, setMembershipTiers] = useState<MembershipTier[]>([]);
+
+  const lockScroll = () => {
+    const body = document.body;
+    const html = document.documentElement;
+    const count = Number(body.dataset.scrollLockCount || '0');
+    body.dataset.scrollLockCount = String(count + 1);
+    if (count === 0) {
+      body.style.overflow = 'hidden';
+      html.style.overflow = 'hidden';
+    }
+  };
+
+  const unlockScroll = () => {
+    const body = document.body;
+    const html = document.documentElement;
+    const count = Number(body.dataset.scrollLockCount || '0');
+    const nextCount = Math.max(0, count - 1);
+    if (nextCount === 0) {
+      delete body.dataset.scrollLockCount;
+      body.style.overflow = '';
+      html.style.overflow = '';
+    } else {
+      body.dataset.scrollLockCount = String(nextCount);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    lockScroll();
+    return () => {
+      unlockScroll();
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    const fetchTiers = async () => {
+      const siteContent = await contentManager.getSiteContent();
+      setMembershipTiers(siteContent.membership?.tiers || []);
+    };
+    fetchTiers();
+  }, []);
+
+  const benefits = isAuthenticated && user?.membership?.status === 'active'
+    ? getMembershipBenefits(user.membership.tierId, membershipTiers)
+    : null;
+
+  const getDiscountedPrice = (price: number) => {
+    return benefits ? calculateProductDiscount(price, benefits) : price;
+  };
+
+  const discountedTotal = state.items.reduce((sum, item) => {
+    return sum + getDiscountedPrice(item.price) * item.quantity;
+  }, 0);
 
   const handleCheckout = () => {
     toggleCart();
@@ -76,7 +148,14 @@ export default function CartSidebar() {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
                         <p className="text-sm text-gray-500">{item.category}</p>
-                        <p className="font-semibold text-primary-600">${item.price.toFixed(2)}</p>
+                        {benefits ? (
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-pink-600">${getDiscountedPrice(item.price).toFixed(2)}</p>
+                            <p className="text-xs text-gray-400 line-through">${item.price.toFixed(2)}</p>
+                          </div>
+                        ) : (
+                          <p className="font-semibold text-primary-600">${item.price.toFixed(2)}</p>
+                        )}
                       </div>
                       
                       <div className="flex flex-col items-end space-y-2">
@@ -112,9 +191,23 @@ export default function CartSidebar() {
             {/* Footer */}
             {state.items.length > 0 && (
               <div className="border-t p-6 space-y-4">
+                {benefits && (
+                  <div className="bg-pink-50 rounded-lg p-3 text-center">
+                    <p className="text-sm text-pink-600 font-medium">
+                      🎉 Member Discount Applied ({benefits.productDiscount}% off)
+                    </p>
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-lg font-semibold">
                   <span>Total:</span>
-                  <span>${state.total.toFixed(2)}</span>
+                  {benefits ? (
+                    <div className="text-right">
+                      <span className="text-pink-600">${discountedTotal.toFixed(2)}</span>
+                      <span className="text-sm text-gray-400 line-through ml-2">${state.total.toFixed(2)}</span>
+                    </div>
+                  ) : (
+                    <span>${state.total.toFixed(2)}</span>
+                  )}
                 </div>
                 
                 <div className="space-y-3">

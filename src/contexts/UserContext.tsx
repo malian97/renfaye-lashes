@@ -18,6 +18,32 @@ interface UserData {
     zipCode: string;
     country: string;
   };
+  membership?: {
+    tierId: string;
+    tierName: string;
+    status: 'active' | 'cancelled' | 'past_due';
+    stripeSubscriptionId?: string;
+    stripeCustomerId?: string;
+    currentPeriodEnd?: string;
+    cancelAtPeriodEnd?: boolean;
+    usage?: {
+      currentPeriodStart: string;
+      refillsUsed: number;
+      fullSetsUsed: number;
+    };
+  };
+  points?: {
+    balance: number;
+    lifetimeEarned: number;
+    history: Array<{
+      id: string;
+      date: string;
+      type: 'earned' | 'redeemed';
+      amount: number;
+      description: string;
+      orderId?: string;
+    }>;
+  };
   createdAt: string;
   updatedAt: string;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -17,6 +17,39 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAdmin();
+
+  useEffect(() => {
+    const lockScroll = () => {
+      const body = document.body;
+      const html = document.documentElement;
+      const count = Number(body.dataset.scrollLockCount || '0');
+      body.dataset.scrollLockCount = String(count + 1);
+      if (count === 0) {
+        body.style.overflow = 'hidden';
+        html.style.overflow = 'hidden';
+      }
+    };
+
+    const unlockScroll = () => {
+      const body = document.body;
+      const html = document.documentElement;
+      const count = Number(body.dataset.scrollLockCount || '0');
+      const nextCount = Math.max(0, count - 1);
+      if (nextCount === 0) {
+        delete body.dataset.scrollLockCount;
+        body.style.overflow = '';
+        html.style.overflow = '';
+      } else {
+        body.dataset.scrollLockCount = String(nextCount);
+      }
+    };
+
+    if (!sidebarOpen) return;
+    lockScroll();
+    return () => {
+      unlockScroll();
+    };
+  }, [sidebarOpen]);
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: FiHome },
@@ -46,7 +79,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      } flex flex-col min-h-0`}>
         <div className="flex items-center justify-between h-16 px-6 border-b">
           <h1 className="text-xl font-bold text-gray-900">RENFAYE Admin</h1>
           <button
@@ -57,7 +90,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-4 py-6 space-y-1">
           {navigation.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -70,6 +103,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     ? 'bg-pink-50 text-pink-600'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
+                onClick={() => setSidebarOpen(false)}
               >
                 <Icon className="w-5 h-5 mr-3" />
                 {item.name}
