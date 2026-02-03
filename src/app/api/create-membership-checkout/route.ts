@@ -71,6 +71,17 @@ export async function POST(request: NextRequest) {
 
     // Get or create Stripe customer
     let stripeCustomerId = user.membership?.stripeCustomerId;
+    let didCreateNewCustomer = false;
+    
+    // If we have a stored customer id, verify it exists in the current Stripe mode.
+    // This commonly breaks when switching between live and test keys.
+    if (stripeCustomerId) {
+      try {
+        await stripe.customers.retrieve(stripeCustomerId);
+      } catch {
+        stripeCustomerId = undefined;
+      }
+    }
     
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
@@ -81,6 +92,7 @@ export async function POST(request: NextRequest) {
         },
       });
       stripeCustomerId = customer.id;
+      didCreateNewCustomer = true;
     }
 
     // Create Stripe checkout session for subscription
@@ -114,8 +126,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Update user with Stripe customer ID if new
-    if (!user.membership?.stripeCustomerId) {
+    // Update user with Stripe customer ID if new (or if we regenerated due to missing customer)
+    if (!user.membership?.stripeCustomerId || didCreateNewCustomer || user.membership?.stripeCustomerId !== stripeCustomerId) {
       const updatedUsers = users.map(u => 
         u.id === userId 
           ? { 
