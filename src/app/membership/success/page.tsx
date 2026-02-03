@@ -36,7 +36,9 @@ function MembershipSuccessContent() {
         } else {
           try {
             const data = await response.json();
-            setErrorMessage(data.details || data.error || 'Failed to verify membership');
+            // Show full error info including debug data
+            const debugInfo = data.debug ? ` | Debug: ${JSON.stringify(data.debug)}` : '';
+            setErrorMessage((data.details || data.error || 'Failed to verify membership') + debugInfo);
           } catch {
             setErrorMessage('Failed to verify membership');
           }
