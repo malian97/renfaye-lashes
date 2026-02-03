@@ -68,34 +68,29 @@ export async function POST(request: NextRequest) {
     // Always retrieve subscription fresh to ensure we have all fields
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     
-    console.log('Stripe subscription response:', JSON.stringify(subscription, null, 2));
-
-    // Handle various possible response shapes from Stripe SDK
     const subObj: any = subscription;
-    const currentPeriodEndUnix: number | undefined = 
-      subObj.current_period_end ?? 
-      subObj.data?.current_period_end ??
-      (subObj.lastResponse?.body ? JSON.parse(subObj.lastResponse.body).current_period_end : undefined);
-    
-    const cancelAtPeriodEnd: boolean | undefined = 
-      subObj.cancel_at_period_end ?? 
-      subObj.data?.cancel_at_period_end;
-    
     const stripeSubscriptionId: string = subObj.id || subscriptionId;
-
-    if (currentPeriodEndUnix == null) {
-      // Return debug info to help diagnose
-      return NextResponse.json(
-        { 
-          error: 'Subscription missing current_period_end',
-          debug: {
-            subscriptionKeys: Object.keys(subObj),
-            hasData: !!subObj.data,
-            subscriptionId: stripeSubscriptionId,
-          }
-        },
-        { status: 400 }
-      );
+    const cancelAtPeriodEnd: boolean = subObj.cancel_at_period_end ?? false;
+    
+    // Stripe API may return current_period_end or we calculate from billing_cycle_anchor/start_date
+    // For monthly subscriptions, period end = start + 1 month
+    let currentPeriodEndUnix: number;
+    
+    if (subObj.current_period_end) {
+      currentPeriodEndUnix = subObj.current_period_end;
+    } else if (subObj.billing_cycle_anchor) {
+      // Calculate next billing date (1 month from anchor for monthly subs)
+      const anchorDate = new Date(subObj.billing_cycle_anchor * 1000);
+      anchorDate.setMonth(anchorDate.getMonth() + 1);
+      currentPeriodEndUnix = Math.floor(anchorDate.getTime() / 1000);
+    } else if (subObj.start_date) {
+      // Fallback: use start_date + 1 month
+      const startDate = new Date(subObj.start_date * 1000);
+      startDate.setMonth(startDate.getMonth() + 1);
+      currentPeriodEndUnix = Math.floor(startDate.getTime() / 1000);
+    } else {
+      // Last resort: set to 30 days from now
+      currentPeriodEndUnix = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);
     }
 
     const customerId =
