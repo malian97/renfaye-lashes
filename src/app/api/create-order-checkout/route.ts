@@ -98,9 +98,6 @@ export async function POST(request: NextRequest) {
         orderId: orderId,
       },
       customer_email: orderData.customerEmail,
-      shipping_address_collection: {
-        allowed_countries: ['US', 'CA'],
-      },
     });
 
     return NextResponse.json({ 

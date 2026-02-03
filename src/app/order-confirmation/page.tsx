@@ -21,9 +21,24 @@ function OrderConfirmationContent() {
 
   const loadOrder = async () => {
     try {
-      // Wait a moment for webhook to process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      // Verify the session with Stripe and update order status
+      if (sessionId && orderId) {
+        const verifyResponse = await fetch('/api/verify-order-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, orderId }),
+        });
+
+        if (verifyResponse.ok) {
+          const data = await verifyResponse.json();
+          setOrder(data.order);
+          setPaymentVerified(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fallback: load order directly if verification fails
       const response = await fetch('/api/orders');
       if (response.ok) {
         const orders = await response.json();
@@ -31,8 +46,7 @@ function OrderConfirmationContent() {
         
         if (foundOrder) {
           setOrder(foundOrder);
-          // Verify payment was successful
-          if (foundOrder.paymentStatus === 'paid' || sessionId) {
+          if (foundOrder.paymentStatus === 'paid') {
             setPaymentVerified(true);
           }
         }
