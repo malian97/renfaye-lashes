@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getUsers, saveUsers } from '@/lib/db';
-import jwt from 'jsonwebtoken';
+import { verifyUserToken } from '@/lib/user-auth';
 
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-11-17.clover' })
   : null;
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 interface MembershipTier {
   id: string;
@@ -39,14 +37,13 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1];
-    let userId: string;
-    
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-      userId = decoded.userId;
-    } catch {
+    const decoded = verifyUserToken(token);
+
+    if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
+
+    const userId = decoded.id;
 
     // Get user
     const users = await getUsers();
