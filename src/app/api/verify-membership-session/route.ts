@@ -65,21 +65,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Subscription not found on session' }, { status: 400 });
     }
 
-    // Prefer expanded subscription if present; otherwise retrieve it.
-    const retrievedSubscription =
-      typeof session.subscription === 'object' && session.subscription
-        ? session.subscription
-        : await stripe.subscriptions.retrieve(subscriptionId);
+    // Always retrieve subscription fresh to ensure we have all fields
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    
+    console.log('Stripe subscription response:', JSON.stringify(subscription, null, 2));
 
-    const subscriptionData: any = (retrievedSubscription as any).data ?? retrievedSubscription;
-
-    const currentPeriodEndUnix: number | undefined = subscriptionData.current_period_end;
-    const cancelAtPeriodEnd: boolean | undefined = subscriptionData.cancel_at_period_end;
-    const stripeSubscriptionId: string = subscriptionData.id || subscriptionId;
+    // Handle various possible response shapes from Stripe SDK
+    const subObj: any = subscription;
+    const currentPeriodEndUnix: number | undefined = 
+      subObj.current_period_end ?? 
+      subObj.data?.current_period_end ??
+      (subObj.lastResponse?.body ? JSON.parse(subObj.lastResponse.body).current_period_end : undefined);
+    
+    const cancelAtPeriodEnd: boolean | undefined = 
+      subObj.cancel_at_period_end ?? 
+      subObj.data?.cancel_at_period_end;
+    
+    const stripeSubscriptionId: string = subObj.id || subscriptionId;
 
     if (currentPeriodEndUnix == null) {
+      // Return debug info to help diagnose
       return NextResponse.json(
-        { error: 'Subscription missing current_period_end' },
+        { 
+          error: 'Subscription missing current_period_end',
+          debug: {
+            subscriptionKeys: Object.keys(subObj),
+            hasData: !!subObj.data,
+            subscriptionId: stripeSubscriptionId,
+          }
+        },
         { status: 400 }
       );
     }
