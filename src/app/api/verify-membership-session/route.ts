@@ -4,7 +4,7 @@ import { getUsers, saveUsers, getStoreSettings } from '@/lib/db';
 import { sendMembershipActivatedEmail } from '@/lib/email';
 
 const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-11-17.clover' })
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
 const membershipTierPrices: Record<string, number> = {
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Retrieve the checkout session
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['subscription'],
+      expand: ['subscription', 'customer'],
     });
 
     if (session.payment_status !== 'paid') {
@@ -51,8 +51,35 @@ export async function POST(request: NextRequest) {
     const tierId = metadata.tierId;
     const tierName = metadata.tierName;
 
+    if (!userId || !tierId || !tierName) {
+      return NextResponse.json({ error: 'Missing required session metadata' }, { status: 400 });
+    }
+
     // Get subscription details
-    const subscription = session.subscription as Stripe.Subscription;
+    const subscriptionId =
+      typeof session.subscription === 'string'
+        ? session.subscription
+        : session.subscription?.id;
+
+    if (!subscriptionId) {
+      return NextResponse.json({ error: 'Subscription not found on session' }, { status: 400 });
+    }
+
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+    const currentPeriodEndUnix: number | undefined =
+      (subscription as any).current_period_end ?? (subscription as any).data?.current_period_end;
+    const cancelAtPeriodEnd: boolean | undefined =
+      (subscription as any).cancel_at_period_end ?? (subscription as any).data?.cancel_at_period_end;
+
+    if (!currentPeriodEndUnix) {
+      return NextResponse.json({ error: 'Subscription missing current_period_end' }, { status: 400 });
+    }
+
+    const customerId =
+      typeof session.customer === 'string'
+        ? session.customer
+        : session.customer?.id;
     
     // Update user with membership info
     const users = await getUsers();
@@ -65,9 +92,9 @@ export async function POST(request: NextRequest) {
             tierName,
             status: 'active' as const,
             stripeSubscriptionId: subscription.id,
-            stripeCustomerId: session.customer as string,
-            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            stripeCustomerId: customerId,
+            currentPeriodEnd: new Date(currentPeriodEndUnix * 1000).toISOString(),
+            cancelAtPeriodEnd,
           },
           updatedAt: new Date().toISOString(),
         };
@@ -105,8 +132,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error verifying membership session:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to verify session' },
+      { error: 'Failed to verify session', details: message },
       { status: 500 }
     );
   }
