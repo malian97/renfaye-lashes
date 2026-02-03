@@ -4,14 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { useUser } from '@/contexts/UserContext';
-import { loadStripe } from '@stripe/stripe-js';
 import Image from 'next/image';
 import { FiMinus, FiPlus, FiTrash2, FiShoppingBag, FiStar } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { contentManager, SiteContent } from '@/lib/content-manager';
 import { calculateMemberProductPrice, MembershipBenefits, calculatePointsEarned } from '@/lib/membership-utils';
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -160,23 +157,14 @@ export default function CheckoutPage() {
         throw new Error('Failed to create checkout session');
       }
 
-      const { sessionId } = await response.json();
+      const { url } = await response.json();
       
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
+      if (!url) {
+        throw new Error('No checkout URL returned');
       }
 
-      // @ts-ignore - Stripe type definitions might be outdated
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Clear cart - this will happen after redirect
-      clearCart();
+      // Redirect to Stripe Checkout using session URL
+      window.location.href = url;
     } catch (error) {
       console.error('Checkout error:', error);
       toast.error('Failed to process checkout. Please try again.');
