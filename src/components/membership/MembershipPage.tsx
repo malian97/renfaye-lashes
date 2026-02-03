@@ -65,7 +65,7 @@ export default function MembershipPage() {
       if (response.ok && data.url) {
         window.location.href = data.url;
       } else {
-        toast.error(data.error || 'Failed to start checkout');
+        toast.error(data.details || data.error || 'Failed to start checkout');
       }
     } catch (error) {
       console.error('Subscription error:', error);
