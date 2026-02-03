@@ -133,7 +133,107 @@ export async function POST(request: NextRequest) {
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log('Payment failed:', paymentIntent.id);
-        // Handle failed payment if needed
+        break;
+      }
+
+      // Handle subscription invoice paid (renewals)
+      case 'invoice.paid': {
+        const invoice = event.data.object as any;
+        
+        // Only process subscription invoices (not one-time payments)
+        if (invoice.subscription && invoice.billing_reason !== 'subscription_create') {
+          const subscriptionId = typeof invoice.subscription === 'string' 
+            ? invoice.subscription 
+            : invoice.subscription.id;
+          
+          const customerId = typeof invoice.customer === 'string'
+            ? invoice.customer
+            : invoice.customer?.id;
+
+          if (customerId) {
+            const users = await getUsers();
+            const userIndex = users.findIndex((u: any) => u.stripeCustomerId === customerId);
+
+            if (userIndex !== -1) {
+              const user = users[userIndex] as any;
+              
+              // Extend membership by calculating new period end
+              const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+              const subObj = subscription as any;
+              const newPeriodEnd = subObj.billing_cycle_anchor 
+                ? new Date((subObj.billing_cycle_anchor + 30 * 24 * 60 * 60) * 1000)
+                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+              user.membership = {
+                ...user.membership,
+                status: 'active',
+                currentPeriodEnd: newPeriodEnd.toISOString(),
+              };
+              user.updatedAt = new Date().toISOString();
+              users[userIndex] = user;
+              await saveUsers(users);
+              
+              console.log(`Membership renewed for user ${user.id} until ${newPeriodEnd.toISOString()}`);
+            }
+          }
+        }
+        break;
+      }
+
+      // Handle subscription cancelled
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId = typeof subscription.customer === 'string'
+          ? subscription.customer
+          : (subscription.customer as any)?.id;
+
+        if (customerId) {
+          const users = await getUsers();
+          const userIndex = users.findIndex((u: any) => u.stripeCustomerId === customerId);
+
+          if (userIndex !== -1) {
+            const user = users[userIndex] as any;
+            
+            if (user.membership) {
+              user.membership.status = 'cancelled';
+              user.updatedAt = new Date().toISOString();
+              users[userIndex] = user;
+              await saveUsers(users);
+              
+              console.log(`Membership cancelled for user ${user.id}`);
+            }
+          }
+        }
+        break;
+      }
+
+      // Handle subscription payment failed
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as any;
+        
+        if (invoice.subscription) {
+          const customerId = typeof invoice.customer === 'string'
+            ? invoice.customer
+            : invoice.customer?.id;
+
+          if (customerId) {
+            const users = await getUsers();
+            const userIndex = users.findIndex((u: any) => u.stripeCustomerId === customerId);
+
+            if (userIndex !== -1) {
+              const user = users[userIndex] as any;
+              
+              if (user.membership) {
+                user.membership.status = 'past_due';
+                user.updatedAt = new Date().toISOString();
+                users[userIndex] = user;
+                await saveUsers(users);
+                
+                console.log(`Membership payment failed for user ${user.id}`);
+              }
+            }
+          }
+        }
         break;
       }
 
