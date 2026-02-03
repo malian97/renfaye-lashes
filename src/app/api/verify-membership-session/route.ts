@@ -65,15 +65,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Subscription not found on session' }, { status: 400 });
     }
 
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    // Prefer expanded subscription if present; otherwise retrieve it.
+    const retrievedSubscription =
+      typeof session.subscription === 'object' && session.subscription
+        ? session.subscription
+        : await stripe.subscriptions.retrieve(subscriptionId);
 
-    const currentPeriodEndUnix: number | undefined =
-      (subscription as any).current_period_end ?? (subscription as any).data?.current_period_end;
-    const cancelAtPeriodEnd: boolean | undefined =
-      (subscription as any).cancel_at_period_end ?? (subscription as any).data?.cancel_at_period_end;
+    const subscriptionData: any = (retrievedSubscription as any).data ?? retrievedSubscription;
 
-    if (!currentPeriodEndUnix) {
-      return NextResponse.json({ error: 'Subscription missing current_period_end' }, { status: 400 });
+    const currentPeriodEndUnix: number | undefined = subscriptionData.current_period_end;
+    const cancelAtPeriodEnd: boolean | undefined = subscriptionData.cancel_at_period_end;
+    const stripeSubscriptionId: string = subscriptionData.id || subscriptionId;
+
+    if (currentPeriodEndUnix == null) {
+      return NextResponse.json(
+        { error: 'Subscription missing current_period_end' },
+        { status: 400 }
+      );
     }
 
     const customerId =
@@ -91,7 +99,7 @@ export async function POST(request: NextRequest) {
             tierId,
             tierName,
             status: 'active' as const,
-            stripeSubscriptionId: subscription.id,
+            stripeSubscriptionId,
             stripeCustomerId: customerId,
             currentPeriodEnd: new Date(currentPeriodEndUnix * 1000).toISOString(),
             cancelAtPeriodEnd,
