@@ -4,7 +4,7 @@ import { getUsers, saveUsers } from '@/lib/db';
 import { verifyUserToken } from '@/lib/user-auth';
 
 const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-11-17.clover' })
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
 interface MembershipTier {
@@ -137,8 +137,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (error) {
     console.error('Error creating membership checkout:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: 'Failed to create checkout session', details: message },
       { status: 500 }
     );
   }
