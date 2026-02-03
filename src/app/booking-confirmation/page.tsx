@@ -20,22 +20,29 @@ function BookingConfirmationContent() {
 
   const loadAppointment = async () => {
     try {
+      // Verify the session with Stripe and update appointment status
+      if (sessionId && appointmentId) {
+        const verifyResponse = await fetch('/api/verify-booking-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, appointmentId }),
+        });
+
+        if (verifyResponse.ok) {
+          const data = await verifyResponse.json();
+          setAppointment(data.appointment);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fallback: load appointment directly if verification fails
       const response = await fetch('/api/appointments');
       if (response.ok) {
         const appointments = await response.json();
         const apt = appointments.find((a: any) => a.id === appointmentId);
         if (apt) {
           setAppointment(apt);
-          // Update payment status to paid
-          await fetch('/api/appointments', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              id: appointmentId, 
-              paymentStatus: 'paid',
-              status: 'confirmed'
-            })
-          });
         }
       }
     } catch (error) {

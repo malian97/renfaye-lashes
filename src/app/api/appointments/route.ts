@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAppointments, saveAppointments } from '@/lib/db';
 import { Appointment } from '@/lib/content-manager';
-import { sendAppointmentConfirmationEmail } from '@/lib/email';
 
 export async function GET() {
   try {
@@ -28,13 +27,7 @@ export async function POST(request: NextRequest) {
     appointments.push(newAppointment);
     await saveAppointments(appointments);
     
-    // Send confirmation email to customer
-    try {
-      await sendAppointmentConfirmationEmail(newAppointment);
-    } catch (emailError) {
-      console.error('Error sending appointment confirmation email:', emailError);
-      // Don't fail the appointment creation if email fails
-    }
+    // Note: Confirmation email is sent after payment verification in /api/verify-booking-session
     
     return NextResponse.json(newAppointment);
   } catch (error) {
