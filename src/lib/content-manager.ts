@@ -151,6 +151,7 @@ export interface Service {
   image: string;
   features: string[];
   popular: boolean;
+  serviceType?: 'full_set' | 'refill' | 'other';
   createdAt: string;
   updatedAt: string;
 }
@@ -284,6 +285,8 @@ export interface SiteContent {
         freeRefillsPerMonth: number;
         freeFullSetsPerMonth: number;
         includedServiceIds: string[];
+        includedRefillServiceId?: string;
+        includedFullSetServiceId?: string;
       };
     }>;
     cta: {

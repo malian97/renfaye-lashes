@@ -7,6 +7,8 @@ export interface MembershipBenefits {
   freeRefillsPerMonth: number;
   freeFullSetsPerMonth: number;
   includedServiceIds: string[];
+  includedRefillServiceId?: string;
+  includedFullSetServiceId?: string;
 }
 
 export interface MembershipTier {

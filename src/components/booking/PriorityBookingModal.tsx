@@ -30,7 +30,7 @@ interface PriorityBookingModalProps {
 
 export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: PriorityBookingModalProps) {
   const { user } = useUser();
-  const [step, setStep] = useState<'select' | 'service' | 'datetime' | 'confirm'>('select');
+  const [step, setStep] = useState<'select' | 'datetime' | 'confirm'>('select');
   const [benefitType, setBenefitType] = useState<'refill' | 'full_set' | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [membershipTiers, setMembershipTiers] = useState<MembershipTier[]>([]);
@@ -52,6 +52,19 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
   const fullSetsRemaining = benefits
     ? (benefits.freeFullSetsPerMonth || 0) - (user?.membership?.usage?.fullSetsUsed || 0)
     : 0;
+
+  // Get the specific included service for the benefit type
+  const getIncludedService = (type: 'refill' | 'full_set'): Service | null => {
+    if (!benefits) return null;
+    const serviceId = type === 'refill' 
+      ? benefits.includedRefillServiceId 
+      : benefits.includedFullSetServiceId;
+    if (!serviceId) return null;
+    return services.find(s => s.id === serviceId) || null;
+  };
+
+  const includedRefillService = getIncludedService('refill');
+  const includedFullSetService = getIncludedService('full_set');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,17 +105,13 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
     }
   };
 
-  const getFilteredServices = () => {
-    if (!benefitType) return [];
-    return services.filter(s => s.serviceType === benefitType);
-  };
-
   const handleSelectBenefit = (type: 'refill' | 'full_set') => {
+    const service = type === 'refill' ? includedRefillService : includedFullSetService;
+    if (!service) {
+      toast.error('No service configured for this benefit. Please contact support.');
+      return;
+    }
     setBenefitType(type);
-    setStep('service');
-  };
-
-  const handleSelectService = (service: Service) => {
     setSelectedService(service);
     setStep('datetime');
   };
@@ -181,7 +190,7 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
                 What would you like to redeem?
               </h3>
 
-              {refillsRemaining > 0 && (
+              {refillsRemaining > 0 && includedRefillService && (
                 <button
                   onClick={() => handleSelectBenefit('refill')}
                   className="w-full p-4 border-2 border-pink-200 rounded-xl hover:border-pink-500 hover:bg-pink-50 transition-all text-left"
@@ -189,6 +198,7 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-gray-900">Free Refill</p>
+                      <p className="text-sm text-pink-600 font-medium">{includedRefillService.name}</p>
                       <p className="text-sm text-gray-600">
                         {refillsRemaining} remaining this month
                       </p>
@@ -201,7 +211,7 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
                 </button>
               )}
 
-              {fullSetsRemaining > 0 && (
+              {fullSetsRemaining > 0 && includedFullSetService && (
                 <button
                   onClick={() => handleSelectBenefit('full_set')}
                   className="w-full p-4 border-2 border-purple-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-left"
@@ -209,6 +219,7 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-gray-900">Free Full Set</p>
+                      <p className="text-sm text-purple-600 font-medium">{includedFullSetService.name}</p>
                       <p className="text-sm text-gray-600">
                         {fullSetsRemaining} remaining this month
                       </p>
@@ -221,57 +232,31 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
                 </button>
               )}
 
-              {refillsRemaining <= 0 && fullSetsRemaining <= 0 && (
+              {/* No available benefits */}
+              {!(refillsRemaining > 0 && includedRefillService) && !(fullSetsRemaining > 0 && includedFullSetService) && (
                 <div className="text-center py-8 text-gray-500">
                   <FiGift className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>You've used all your free benefits this month.</p>
-                  <p className="text-sm mt-2">Benefits reset at the start of your next billing period.</p>
+                  {refillsRemaining <= 0 && fullSetsRemaining <= 0 ? (
+                    <>
+                      <p>You've used all your free benefits this month.</p>
+                      <p className="text-sm mt-2">Benefits reset at the start of your next billing period.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p>No services are configured for your membership benefits.</p>
+                      <p className="text-sm mt-2">Please contact us to book your free service.</p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
           )}
 
-          {/* Step 2: Select Service */}
-          {step === 'service' && (
-            <div className="space-y-4">
-              <button
-                onClick={() => setStep('select')}
-                className="text-pink-600 text-sm hover:underline mb-2"
-              >
-                ← Back
-              </button>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Select a {benefitType === 'refill' ? 'Refill' : 'Full Set'} Service
-              </h3>
-
-              {getFilteredServices().length > 0 ? (
-                <div className="space-y-3">
-                  {getFilteredServices().map((service) => (
-                    <button
-                      key={service.id}
-                      onClick={() => handleSelectService(service)}
-                      className="w-full p-4 border border-gray-200 rounded-xl hover:border-pink-500 hover:bg-pink-50 transition-all text-left"
-                    >
-                      <p className="font-semibold text-gray-900">{service.name}</p>
-                      <p className="text-sm text-gray-600">{service.duration}</p>
-                      <p className="text-sm text-gray-400 line-through">{service.price}</p>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No {benefitType === 'refill' ? 'refill' : 'full set'} services available.</p>
-                  <p className="text-sm mt-2">Please contact us to book your free service.</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Step 3: Select Date & Time */}
+          {/* Step 2: Select Date & Time */}
           {step === 'datetime' && selectedService && (
             <div className="space-y-4">
               <button
-                onClick={() => setStep('service')}
+                onClick={() => setStep('select')}
                 className="text-pink-600 text-sm hover:underline mb-2"
               >
                 ← Back

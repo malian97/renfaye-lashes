@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import ImageUpload from '@/components/admin/ImageUpload';
-import { contentManager, SiteContent } from '@/lib/content-manager';
+import { contentManager, SiteContent, Service } from '@/lib/content-manager';
 import { FiSave, FiPlus, FiTrash2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -13,6 +13,7 @@ export default function AdminContent() {
   const { isAdmin, isLoading } = useAdmin();
   const router = useRouter();
   const [content, setContent] = useState<SiteContent | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
   const [activeTab, setActiveTab] = useState<'hero' | 'about' | 'testimonials' | 'policy' | 'contact' | 'sizeGuide' | 'membership'>('hero');
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -26,6 +27,8 @@ export default function AdminContent() {
     const loadContent = async () => {
       const siteContent = await contentManager.getSiteContent();
       setContent(siteContent);
+      const allServices = await contentManager.getServices();
+      setServices(allServices);
     };
     loadContent();
   }, []);
@@ -1601,6 +1604,70 @@ export default function AdminContent() {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm"
                               />
                             </div>
+                          </div>
+                          
+                          {/* Included Services for Priority Booking */}
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <h5 className="text-xs font-semibold text-gray-700 mb-3">Included Services (for Priority Booking)</h5>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Included Refill Service</label>
+                                <select
+                                  value={tier.benefits?.includedRefillServiceId || ''}
+                                  onChange={(e) => {
+                                    const newTiers = [...content.membership.tiers];
+                                    newTiers[index].benefits = {
+                                      ...newTiers[index].benefits,
+                                      includedRefillServiceId: e.target.value || undefined
+                                    };
+                                    updateContent('membership', { ...content.membership, tiers: newTiers });
+                                  }}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm"
+                                >
+                                  <option value="">-- Select Refill Service --</option>
+                                  {services.filter(s => s.serviceType === 'refill').map(s => (
+                                    <option key={s.id} value={s.id}>{s.name} (${s.price})</option>
+                                  ))}
+                                  {services.filter(s => !s.serviceType || s.serviceType === 'other').length > 0 && (
+                                    <optgroup label="Other Services">
+                                      {services.filter(s => !s.serviceType || s.serviceType === 'other').map(s => (
+                                        <option key={s.id} value={s.id}>{s.name} (${s.price})</option>
+                                      ))}
+                                    </optgroup>
+                                  )}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Included Full Set Service</label>
+                                <select
+                                  value={tier.benefits?.includedFullSetServiceId || ''}
+                                  onChange={(e) => {
+                                    const newTiers = [...content.membership.tiers];
+                                    newTiers[index].benefits = {
+                                      ...newTiers[index].benefits,
+                                      includedFullSetServiceId: e.target.value || undefined
+                                    };
+                                    updateContent('membership', { ...content.membership, tiers: newTiers });
+                                  }}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm"
+                                >
+                                  <option value="">-- Select Full Set Service --</option>
+                                  {services.filter(s => s.serviceType === 'full_set').map(s => (
+                                    <option key={s.id} value={s.id}>{s.name} (${s.price})</option>
+                                  ))}
+                                  {services.filter(s => !s.serviceType || s.serviceType === 'other').length > 0 && (
+                                    <optgroup label="Other Services">
+                                      {services.filter(s => !s.serviceType || s.serviceType === 'other').map(s => (
+                                        <option key={s.id} value={s.id}>{s.name} (${s.price})</option>
+                                      ))}
+                                    </optgroup>
+                                  )}
+                                </select>
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Select which specific service members get for free. Lower tiers should have cheaper services.
+                            </p>
                           </div>
                         </div>
                         
