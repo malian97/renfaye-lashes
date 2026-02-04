@@ -399,7 +399,7 @@ export default function AccountPage() {
                       return (
                         <div className="bg-white border border-gray-200 rounded-xl p-6">
                           <h4 className="font-semibold text-gray-900 mb-4">Your Benefits</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             <div className="text-center p-3 bg-pink-50 rounded-lg">
                               <p className="text-2xl font-bold text-pink-600">{benefits?.productDiscount || 0}%</p>
                               <p className="text-xs text-gray-600">Product Discount</p>
@@ -412,19 +412,18 @@ export default function AccountPage() {
                               <p className="text-2xl font-bold text-pink-600">{benefits?.freeRefillsPerMonth || 0}</p>
                               <p className="text-xs text-gray-600">Free Refills/Mo</p>
                             </div>
+                            <div className="text-center p-3 bg-purple-50 rounded-lg">
+                              <p className="text-2xl font-bold text-purple-600">{benefits?.freeFullSetsPerMonth || 0}</p>
+                              <p className="text-xs text-gray-600">Free Full Sets/Mo</p>
+                            </div>
                             <div className="text-center p-3 bg-pink-50 rounded-lg">
-                              <p className="text-2xl font-bold text-pink-600">{(benefits?.freeRefillsPerMonth || 0) > 0 ? '✓' : '—'}</p>
+                              <p className="text-2xl font-bold text-pink-600">{((benefits?.freeRefillsPerMonth || 0) > 0 || (benefits?.freeFullSetsPerMonth || 0) > 0) ? '✓' : '—'}</p>
                               <p className="text-xs text-gray-600">Priority Booking</p>
                             </div>
                           </div>
                           {(benefits?.serviceDiscount && benefits.serviceDiscount > 0) && (
                             <div className="mt-4 text-center p-3 bg-green-50 rounded-lg">
                               <p className="text-lg font-bold text-green-600">{benefits.serviceDiscount}% off all services</p>
-                            </div>
-                          )}
-                          {(benefits?.freeFullSetsPerMonth && benefits.freeFullSetsPerMonth > 0) && (
-                            <div className="mt-2 text-center text-sm text-gray-600">
-                              + {benefits.freeFullSetsPerMonth} free full set(s) per month
                             </div>
                           )}
                         </div>
