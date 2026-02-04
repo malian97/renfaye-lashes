@@ -421,7 +421,7 @@ export default function AccountPage() {
                               <p className="text-xs text-gray-600">Priority Booking</p>
                             </div>
                           </div>
-                          {(benefits?.serviceDiscount && benefits.serviceDiscount > 0) && (
+                          {!!benefits?.serviceDiscount && (
                             <div className="mt-4 text-center p-3 bg-green-50 rounded-lg">
                               <p className="text-lg font-bold text-green-600">{benefits.serviceDiscount}% off all services</p>
                             </div>
