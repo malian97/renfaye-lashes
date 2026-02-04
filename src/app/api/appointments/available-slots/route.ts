@@ -46,11 +46,24 @@ export async function GET(request: NextRequest) {
     
     // Get existing appointments for this date
     const appointments = await getAppointments();
-    const dateAppointments = appointments.filter(a => 
-      a.date === date && 
-      a.status !== 'cancelled' &&
-      a.paymentStatus === 'paid'
-    );
+    const currentTime2 = new Date();
+    const PENDING_EXPIRY_MINUTES = 15; // Pending bookings expire after 15 minutes
+    
+    const dateAppointments = appointments.filter(a => {
+      if (a.date !== date || a.status === 'cancelled') return false;
+      
+      // Paid/confirmed appointments always block the slot
+      if (a.paymentStatus === 'paid') return true;
+      
+      // Pending appointments only block if created within last 15 minutes
+      if (a.paymentStatus === 'pending' && a.createdAt) {
+        const createdAt = new Date(a.createdAt);
+        const minutesAgo = (currentTime2.getTime() - createdAt.getTime()) / (1000 * 60);
+        return minutesAgo < PENDING_EXPIRY_MINUTES;
+      }
+      
+      return false;
+    });
     
     // Count appointments per slot
     const slotCounts = new Map<string, number>();
