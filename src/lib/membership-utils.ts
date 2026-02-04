@@ -228,7 +228,9 @@ export function getMembershipBenefits(
     pointsRate: tier.benefits.pointsRate || 0,
     freeRefillsPerMonth: tier.benefits.freeRefillsPerMonth || 0,
     freeFullSetsPerMonth: tier.benefits.freeFullSetsPerMonth || 0,
-    includedServiceIds: tier.benefits.includedServiceIds || []
+    includedServiceIds: tier.benefits.includedServiceIds || [],
+    includedRefillServiceId: tier.benefits.includedRefillServiceId,
+    includedFullSetServiceId: tier.benefits.includedFullSetServiceId
   };
 }
 
