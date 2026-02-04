@@ -211,6 +211,7 @@ export interface SiteContent {
     duration: string;
     image: string;
     popular: boolean;
+    serviceType?: 'full_set' | 'refill' | 'other';
   }>;
   policy: {
     title: string;

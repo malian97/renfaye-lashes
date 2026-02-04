@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import OrderHistory from '@/components/account/OrderHistory';
 import Appointments from '@/components/account/Appointments';
 import TransactionHistory from '@/components/account/TransactionHistory';
+import PriorityBookingModal from '@/components/booking/PriorityBookingModal';
 import { contentManager } from '@/lib/content-manager';
 import { getMembershipBenefits } from '@/lib/membership-utils';
 
@@ -63,6 +64,7 @@ export default function AccountPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showPriorityBookingModal, setShowPriorityBookingModal] = useState(false);
 
   useEffect(() => {
     if (!userLoading && !isAuthenticated) {
@@ -334,6 +336,39 @@ export default function AccountPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Priority Booking Button */}
+                    {(() => {
+                      const benefits = getMembershipBenefits(user.membership.tierId, membershipTiers);
+                      const refillsRemaining = (benefits?.freeRefillsPerMonth || 0) - (user.membership.usage?.refillsUsed || 0);
+                      const fullSetsRemaining = (benefits?.freeFullSetsPerMonth || 0) - (user.membership.usage?.fullSetsUsed || 0);
+                      const hasAvailableBenefits = refillsRemaining > 0 || fullSetsRemaining > 0;
+                      
+                      return hasAvailableBenefits ? (
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-semibold text-gray-900 flex items-center">
+                                <FiCalendar className="mr-2 text-purple-600" />
+                                Priority Booking
+                              </h4>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {refillsRemaining > 0 && `${refillsRemaining} free refill${refillsRemaining > 1 ? 's' : ''}`}
+                                {refillsRemaining > 0 && fullSetsRemaining > 0 && ' • '}
+                                {fullSetsRemaining > 0 && `${fullSetsRemaining} free full set${fullSetsRemaining > 1 ? 's' : ''}`}
+                                {' available'}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setShowPriorityBookingModal(true)}
+                              className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-purple-600 transition-all shadow-md"
+                            >
+                              Book Now
+                            </button>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
 
                     {/* Points & Usage Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -737,6 +772,16 @@ export default function AccountPage() {
           </div>
         </div>
       )}
+
+      {/* Priority Booking Modal */}
+      <PriorityBookingModal
+        isOpen={showPriorityBookingModal}
+        onClose={() => setShowPriorityBookingModal(false)}
+        onSuccess={() => {
+          // Refresh user data to update usage counts
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }
