@@ -17,7 +17,7 @@ export default function EditService() {
   const serviceId = params.id as string;
   const isNew = serviceId === 'new';
 
-  const [formData, setFormData] = useState<Service>({
+  const [formData, setFormData] = useState<Service & { serviceType?: 'full_set' | 'refill' | 'other' }>({
     id: '',
     name: '',
     description: '',
@@ -26,6 +26,7 @@ export default function EditService() {
     image: '',
     features: [''],
     popular: false,
+    serviceType: 'other',
     createdAt: '',
     updatedAt: ''
   });
@@ -219,6 +220,24 @@ export default function EditService() {
                 onChange={(url) => setFormData({ ...formData, image: url })}
                 label="Service Image *"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Service Type (for membership benefits)
+              </label>
+              <select
+                value={formData.serviceType || 'other'}
+                onChange={(e) => setFormData({ ...formData, serviceType: e.target.value as 'full_set' | 'refill' | 'other' })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              >
+                <option value="other">Other / Standard Service</option>
+                <option value="full_set">Full Set (for free full set benefit)</option>
+                <option value="refill">Refill (for free refill benefit)</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Members can redeem free services based on this type
+              </p>
             </div>
 
             <div className="flex items-center">
