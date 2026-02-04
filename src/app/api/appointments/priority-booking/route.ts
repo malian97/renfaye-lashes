@@ -15,7 +15,9 @@ export async function POST(request: NextRequest) {
       customerPhone, 
       date, 
       time, 
-      benefitType 
+      benefitType,
+      technicianId,
+      technicianName
     } = data;
 
     if (!userId || !serviceId || !date || !time || !benefitType) {
@@ -77,6 +79,8 @@ export async function POST(request: NextRequest) {
       remainingBalance: 0,
       balancePaid: true,
       userId,
+      technicianId: technicianId || undefined,
+      technicianName: technicianName || undefined,
       status: 'confirmed', // Auto-confirm priority bookings
       paymentStatus: 'paid', // No payment needed
       notes: `Priority booking - Free ${benefitType === 'refill' ? 'Refill' : 'Full Set'} (${user.membership.tierName} membership)`,

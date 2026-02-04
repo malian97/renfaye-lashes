@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { contentManager } from '@/lib/content-manager';
 import { getMembershipBenefits, MembershipBenefits } from '@/lib/membership-utils';
-import { FiX, FiCalendar, FiClock, FiGift, FiCheck } from 'react-icons/fi';
+import { FiX, FiCalendar, FiClock, FiGift, FiCheck, FiUsers } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 interface Service {
@@ -40,6 +40,8 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [technicians, setTechnicians] = useState<Array<{ id: string; name: string; role: string; isTechnician?: boolean }>>([]);
+  const [selectedTechnician, setSelectedTechnician] = useState('');
 
   const benefits = user?.membership?.tierId 
     ? getMembershipBenefits(user.membership.tierId, membershipTiers)
@@ -71,6 +73,10 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
       const siteContent = await contentManager.getSiteContent();
       setMembershipTiers(siteContent.membership?.tiers || []);
       
+      // Filter team members who are technicians
+      const techs = (siteContent.about?.team || []).filter(member => member.isTechnician);
+      setTechnicians(techs);
+      
       const allServices = await contentManager.getServices();
       setServices(allServices);
     };
@@ -81,6 +87,7 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
       setSelectedService(null);
       setSelectedDate('');
       setSelectedTime('');
+      setSelectedTechnician('');
     }
   }, [isOpen]);
 
@@ -137,6 +144,8 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
           date: selectedDate,
           time: selectedTime,
           benefitType: benefitType,
+          technicianId: selectedTechnician || undefined,
+          technicianName: technicians.find(t => t.id === selectedTechnician)?.name || undefined,
         }),
       });
 
@@ -316,6 +325,31 @@ export default function PriorityBookingModal({ isOpen, onClose, onSuccess }: Pri
                       No available slots for this date
                     </p>
                   )}
+                </div>
+              )}
+
+              {/* Technician Selection */}
+              {technicians.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FiUsers className="inline mr-2" />
+                    Preferred Technician (Optional)
+                  </label>
+                  <select
+                    value={selectedTechnician}
+                    onChange={(e) => setSelectedTechnician(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  >
+                    <option value="">No preference</option>
+                    {technicians.map((tech) => (
+                      <option key={tech.id} value={tech.id}>
+                        {tech.name} - {tech.role}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select your preferred technician or leave as &quot;No preference&quot;
+                  </p>
                 </div>
               )}
 
