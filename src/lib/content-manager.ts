@@ -733,20 +733,24 @@ class ContentManager {
             title: 'Booking & Appointment Policy',
             content: [
               {
+                subtitle: 'Deposit Requirement',
+                text: 'A $25 non-refundable deposit is required at the time of booking to secure your appointment. This deposit will be applied toward your total service cost. The remaining balance is due at the time of your appointment.'
+              },
+              {
                 subtitle: 'Booking Confirmation',
-                text: 'All appointments must be confirmed via phone, email, or through our online booking system. You will receive a confirmation message once your booking is complete.'
+                text: 'All appointments must be confirmed via phone, email, or through our online booking system. You will receive a confirmation message once your booking and deposit payment are complete.'
               },
               {
                 subtitle: 'Cancellation Policy',
-                text: 'We require at least 24 hours notice for cancellations or rescheduling. Cancellations made with less than 24 hours notice may be subject to a cancellation fee of 50% of the service cost.'
+                text: 'We require at least 24 hours notice for cancellations or rescheduling. Please note that the $25 deposit is non-refundable regardless of when you cancel. Cancellations made with less than 24 hours notice may forfeit the deposit with no exceptions.'
               },
               {
                 subtitle: 'Late Arrivals',
-                text: 'Please arrive on time for your appointment. If you arrive more than 15 minutes late, we may need to reschedule your appointment or reduce service time to accommodate other clients.'
+                text: 'Please arrive on time for your appointment. If you arrive more than 15 minutes late, we may need to reschedule your appointment or reduce service time to accommodate other clients. Your deposit will not be refunded for late arrivals that result in rescheduling.'
               },
               {
                 subtitle: 'No-Show Policy',
-                text: 'Failure to show up for a scheduled appointment without prior notice will result in a no-show fee equivalent to 100% of the service cost.'
+                text: 'Failure to show up for a scheduled appointment without prior notice will result in forfeiture of your $25 deposit. Repeat no-shows may require full prepayment for future bookings.'
               }
             ]
           },
