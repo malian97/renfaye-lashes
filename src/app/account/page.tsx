@@ -8,12 +8,29 @@ import toast from 'react-hot-toast';
 import OrderHistory from '@/components/account/OrderHistory';
 import Appointments from '@/components/account/Appointments';
 import TransactionHistory from '@/components/account/TransactionHistory';
+import { contentManager } from '@/lib/content-manager';
+import { getMembershipBenefits } from '@/lib/membership-utils';
+
+interface MembershipTier {
+  id: string;
+  name: string;
+  price: number;
+  benefits?: {
+    productDiscount?: number;
+    serviceDiscount?: number;
+    pointsRate?: number;
+    freeRefills?: number;
+    freeFullSets?: number;
+    priorityBooking?: boolean;
+  };
+}
 
 export default function AccountPage() {
   const { user, isLoading: userLoading, isAuthenticated, logout, updateProfile } = useUser();
   const router = useRouter();
   
   const [activeTab, setActiveTab] = useState<'profile' | 'membership' | 'orders' | 'appointments' | 'transactions' | 'password'>('profile');
+  const [membershipTiers, setMembershipTiers] = useState<MembershipTier[]>([]);
   
   // Profile form state
   const [profileData, setProfileData] = useState({
@@ -52,6 +69,15 @@ export default function AccountPage() {
       router.push('/login');
     }
   }, [isAuthenticated, userLoading, router]);
+
+  // Fetch membership tiers from CMS
+  useEffect(() => {
+    const fetchTiers = async () => {
+      const siteContent = await contentManager.getSiteContent();
+      setMembershipTiers(siteContent.membership?.tiers || []);
+    };
+    fetchTiers();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -332,28 +358,43 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-                    {/* Benefits Summary */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-6">
-                      <h4 className="font-semibold text-gray-900 mb-4">Your Benefits</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-3 bg-pink-50 rounded-lg">
-                          <p className="text-2xl font-bold text-pink-600">10%</p>
-                          <p className="text-xs text-gray-600">Product Discount</p>
+                    {/* Benefits Summary - Dynamic from CMS */}
+                    {(() => {
+                      const benefits = getMembershipBenefits(user.membership.tierId, membershipTiers);
+                      return (
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                          <h4 className="font-semibold text-gray-900 mb-4">Your Benefits</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center p-3 bg-pink-50 rounded-lg">
+                              <p className="text-2xl font-bold text-pink-600">{benefits?.productDiscount || 0}%</p>
+                              <p className="text-xs text-gray-600">Product Discount</p>
+                            </div>
+                            <div className="text-center p-3 bg-pink-50 rounded-lg">
+                              <p className="text-2xl font-bold text-pink-600">{benefits?.pointsRate || 0}%</p>
+                              <p className="text-xs text-gray-600">Points Rate</p>
+                            </div>
+                            <div className="text-center p-3 bg-pink-50 rounded-lg">
+                              <p className="text-2xl font-bold text-pink-600">{benefits?.freeRefillsPerMonth || 0}</p>
+                              <p className="text-xs text-gray-600">Free Refills/Mo</p>
+                            </div>
+                            <div className="text-center p-3 bg-pink-50 rounded-lg">
+                              <p className="text-2xl font-bold text-pink-600">{(benefits?.freeRefillsPerMonth || 0) > 0 ? '✓' : '—'}</p>
+                              <p className="text-xs text-gray-600">Priority Booking</p>
+                            </div>
+                          </div>
+                          {(benefits?.serviceDiscount && benefits.serviceDiscount > 0) && (
+                            <div className="mt-4 text-center p-3 bg-green-50 rounded-lg">
+                              <p className="text-lg font-bold text-green-600">{benefits.serviceDiscount}% off all services</p>
+                            </div>
+                          )}
+                          {(benefits?.freeFullSetsPerMonth && benefits.freeFullSetsPerMonth > 0) && (
+                            <div className="mt-2 text-center text-sm text-gray-600">
+                              + {benefits.freeFullSetsPerMonth} free full set(s) per month
+                            </div>
+                          )}
                         </div>
-                        <div className="text-center p-3 bg-pink-50 rounded-lg">
-                          <p className="text-2xl font-bold text-pink-600">5%</p>
-                          <p className="text-xs text-gray-600">Points Rate</p>
-                        </div>
-                        <div className="text-center p-3 bg-pink-50 rounded-lg">
-                          <p className="text-2xl font-bold text-pink-600">2</p>
-                          <p className="text-xs text-gray-600">Free Refills/Mo</p>
-                        </div>
-                        <div className="text-center p-3 bg-pink-50 rounded-lg">
-                          <p className="text-2xl font-bold text-pink-600">∞</p>
-                          <p className="text-xs text-gray-600">Priority Booking</p>
-                        </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
 
                     {/* Cancel Membership */}
                     {!user.membership.cancelAtPeriodEnd && (
