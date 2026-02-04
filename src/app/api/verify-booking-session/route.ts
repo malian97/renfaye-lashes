@@ -42,11 +42,19 @@ export async function POST(request: NextRequest) {
 
     const appointment = appointments[appointmentIndex];
 
+    // Get deposit info from session metadata
+    const depositAmount = session.metadata?.depositAmount ? parseFloat(session.metadata.depositAmount) : 25;
+    const remainingBalance = session.metadata?.remainingBalance ? parseFloat(session.metadata.remainingBalance) : (appointment.price - depositAmount);
+
     // Only update and send email if not already processed
-    if (appointment.paymentStatus !== 'paid') {
+    if (appointment.paymentStatus === 'pending') {
       appointments[appointmentIndex] = {
         ...appointment,
-        paymentStatus: 'paid',
+        depositAmount: depositAmount,
+        depositPaid: true,
+        remainingBalance: remainingBalance,
+        balancePaid: remainingBalance === 0, // If service costs $25 or less, fully paid
+        paymentStatus: remainingBalance === 0 ? 'paid' : 'deposit_paid',
         status: 'confirmed',
         paymentIntentId: session.payment_intent as string,
         updatedAt: new Date().toISOString()

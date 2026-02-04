@@ -217,6 +217,20 @@ export default function BookingModal({ service, isOpen, onClose }: BookingModalP
             </div>
             <p className="text-sm text-gray-600">{service.description}</p>
             
+            {/* Deposit Info */}
+            <div className="mt-3 pt-3 border-t border-pink-200">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Deposit due today (non-refundable):</span>
+                <span className="font-bold text-pink-600">${Math.min(25, finalPrice).toFixed(2)}</span>
+              </div>
+              {finalPrice > 25 && (
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-gray-600">Remaining balance at appointment:</span>
+                  <span className="font-medium text-gray-700">${(finalPrice - 25).toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+            
             {/* Points Earning Preview */}
             {pointsToEarn > 0 && (
               <div className="mt-3 pt-3 border-t border-pink-200 flex items-center text-sm text-pink-600">

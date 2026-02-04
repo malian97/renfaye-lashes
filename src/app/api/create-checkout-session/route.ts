@@ -33,7 +33,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
     }
     
-    // Create Stripe checkout session
+    // Fixed $25 non-refundable deposit
+    const DEPOSIT_AMOUNT = 25;
+    const depositAmount = Math.min(DEPOSIT_AMOUNT, appointment.price); // Don't charge more than service price
+    const remainingBalance = appointment.price - depositAmount;
+    
+    // Create Stripe checkout session for deposit only
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -41,10 +46,10 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: appointment.serviceName,
-              description: `Appointment on ${appointment.date} at ${appointment.time}`,
+              name: `Deposit - ${appointment.serviceName}`,
+              description: `Non-refundable deposit for appointment on ${appointment.date} at ${appointment.time}. Remaining balance of $${remainingBalance.toFixed(2)} due at appointment.`,
             },
-            unit_amount: Math.round(appointment.price * 100), // Stripe uses cents
+            unit_amount: Math.round(depositAmount * 100), // Stripe uses cents
           },
           quantity: 1,
         },
@@ -56,6 +61,8 @@ export async function POST(request: NextRequest) {
       customer_email: appointment.customerEmail,
       metadata: {
         appointmentId: appointmentId,
+        depositAmount: depositAmount.toString(),
+        remainingBalance: remainingBalance.toString(),
       },
     });
     

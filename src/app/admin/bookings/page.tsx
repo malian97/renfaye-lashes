@@ -150,6 +150,7 @@ export default function AdminBookings() {
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
       case 'paid': return 'bg-green-100 text-green-800';
+      case 'deposit_paid': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'refunded': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -350,7 +351,7 @@ export default function AdminBookings() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(appointment.paymentStatus)}`}>
-                          {appointment.paymentStatus}
+                          {appointment.paymentStatus === 'deposit_paid' ? 'Deposit Paid' : appointment.paymentStatus}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -428,9 +429,24 @@ export default function AdminBookings() {
                     <span className="font-medium">{selectedAppointment.time}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Amount:</span>
+                    <span className="text-gray-600">Total Price:</span>
                     <span className="font-medium text-pink-600">${selectedAppointment.price.toFixed(2)}</span>
                   </div>
+                  {selectedAppointment.depositAmount && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Deposit Paid:</span>
+                        <span className="font-medium text-green-600">${selectedAppointment.depositAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Balance Due:</span>
+                        <span className={`font-medium ${selectedAppointment.balancePaid ? 'text-green-600' : 'text-orange-600'}`}>
+                          ${(selectedAppointment.remainingBalance || 0).toFixed(2)}
+                          {selectedAppointment.balancePaid && ' (Paid)'}
+                        </span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Status:</span>
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(selectedAppointment.status)}`}>
@@ -440,7 +456,7 @@ export default function AdminBookings() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Payment:</span>
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(selectedAppointment.paymentStatus)}`}>
-                      {selectedAppointment.paymentStatus}
+                      {selectedAppointment.paymentStatus === 'deposit_paid' ? 'Deposit Paid' : selectedAppointment.paymentStatus}
                     </span>
                   </div>
                 </div>

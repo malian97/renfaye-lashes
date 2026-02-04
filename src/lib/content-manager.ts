@@ -98,6 +98,10 @@ export interface Appointment {
   time: string; // HH:MM
   price: number;
   originalPrice?: number;
+  depositAmount?: number;
+  depositPaid?: boolean;
+  remainingBalance?: number;
+  balancePaid?: boolean;
   pointsRedeemed?: number;
   pointsDiscount?: number;
   pointsToEarn?: number;
@@ -105,7 +109,7 @@ export interface Appointment {
   technicianId?: string;
   technicianName?: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  paymentStatus: 'pending' | 'paid' | 'refunded';
+  paymentStatus: 'pending' | 'deposit_paid' | 'paid' | 'refunded';
   paymentIntentId?: string;
   notes?: string;
   createdAt: string;

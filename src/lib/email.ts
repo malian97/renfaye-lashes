@@ -176,9 +176,22 @@ export function generateAppointmentConfirmationEmail(appointment: Appointment): 
                 <p style="margin: 8px 0;"><strong style="color: #1f2937;">Service:</strong> <span style="color: #4b5563;">${appointment.serviceName}</span></p>
                 <p style="margin: 8px 0;"><strong style="color: #1f2937;">Date:</strong> <span style="color: #4b5563;">${new Date(appointment.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span></p>
                 <p style="margin: 8px 0;"><strong style="color: #1f2937;">Time:</strong> <span style="color: #4b5563;">${appointment.time}</span></p>
-                ${appointment.price ? `<p style="margin: 8px 0;"><strong style="color: #1f2937;">Price:</strong> <span style="color: #ec4899; font-size: 18px;">$${appointment.price}</span></p>` : ''}
+                ${appointment.price ? `<p style="margin: 8px 0;"><strong style="color: #1f2937;">Total Service Price:</strong> <span style="color: #4b5563;">$${appointment.price.toFixed(2)}</span></p>` : ''}
               </div>
             </div>
+
+            <!-- Payment Details -->
+            ${appointment.depositAmount ? `
+            <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; border-radius: 8px; padding: 20px; margin: 24px 0;">
+              <h4 style="margin-top: 0; color: #166534; font-size: 16px;">💳 Payment Summary</h4>
+              <p style="margin: 8px 0; color: #166534;"><strong>Deposit Paid (non-refundable):</strong> <span style="font-size: 18px; font-weight: bold;">$${appointment.depositAmount.toFixed(2)}</span></p>
+              ${appointment.remainingBalance && appointment.remainingBalance > 0 ? `
+              <p style="margin: 8px 0; color: #92400e; background-color: #fef3c7; padding: 12px; border-radius: 6px;">
+                <strong>⚠️ Balance Due at Appointment:</strong> <span style="font-size: 18px; font-weight: bold;">$${appointment.remainingBalance.toFixed(2)}</span>
+              </p>
+              ` : '<p style="margin: 8px 0; color: #166534;"><strong>✓ Fully Paid</strong></p>'}
+            </div>
+            ` : ''}
 
             <!-- Customer Information -->
             <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin: 24px 0;">

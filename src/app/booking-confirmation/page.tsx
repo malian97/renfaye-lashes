@@ -121,12 +121,35 @@ function BookingConfirmationContent() {
                     {appointment.time}
                   </div>
                 </div>
-                <div className="flex justify-between items-center pt-3 border-t">
-                  <span className="text-gray-600">Amount Paid:</span>
-                  <span className="text-2xl font-bold text-pink-600">
-                    ${appointment.price.toFixed(2)}
-                  </span>
-                </div>
+                {appointment.depositAmount ? (
+                  <>
+                    <div className="flex justify-between items-center pt-3 border-t">
+                      <span className="text-gray-600">Deposit Paid:</span>
+                      <span className="text-xl font-bold text-green-600">
+                        ${appointment.depositAmount.toFixed(2)}
+                      </span>
+                    </div>
+                    {appointment.remainingBalance > 0 && (
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-gray-600">Balance Due at Appointment:</span>
+                        <span className="text-xl font-bold text-pink-600">
+                          ${appointment.remainingBalance.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
+                      <span>Total Service Price:</span>
+                      <span>${appointment.price.toFixed(2)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between items-center pt-3 border-t">
+                    <span className="text-gray-600">Amount Paid:</span>
+                    <span className="text-2xl font-bold text-pink-600">
+                      ${appointment.price.toFixed(2)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
